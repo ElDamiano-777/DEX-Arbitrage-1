@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArbV2 Contract Interface</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        button { margin: 5px; padding: 10px; }
+        input { margin: 5px; padding: 5px; }
+        .result { margin-top: 20px; padding: 10px; background-color: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>ArbV2 Contract Interface</h1>
+    
+    <table>
+        <tr>
+            <td>
+                <button id="connectButton">Connect to MetaMask</button>
+    <div id="accountInfo"></div>
+
+    <h2>Get Amount Out Min</h2>
+    <input id="routerAddress" placeholder="Router Address">
+    <input id="tokenInAddress" placeholder="Token In Address">
+    <input id="tokenOutAddress" placeholder="Token Out Address">
+    <input id="amountIn" type="number" placeholder="Amount In">
+    <button id="getAmountOutMinButton">Get Amount Out Min</button>
+
+    <h2>Estimate Dual Dex Trade</h2>
+    <input id="router1" placeholder="Router 1 Address">
+    <input id="router2" placeholder="Router 2 Address">
+    <input id="token1" placeholder="Token 1 Address">
+    <input id="token2" placeholder="Token 2 Address">
+    <input id="amount" type="number" placeholder="Amount">
+    <button id="estimateDualDexTradeButton">Estimate Dual Dex Trade</button>
+
+    <h2>Execute Dual Dex Trade</h2>
+    <button id="dualDexTradeButton">Execute Dual Dex Trade</button>
+
+    <h2>Estimate Tri Dex Trade</h2>
+    <input id="router3" placeholder="Router 3 Address">
+    <input id="token3" placeholder="Token 3 Address">
+    <button id="estimateTriDexTradeButton">Estimate Tri Dex Trade</button>
+
+    <h2>Get Token Balance</h2>
+    <input id="tokenAddress" placeholder="Token Address">
+    <button id="getBalanceButton">Get Balance</button>
+
+    <h2>Recover ETH</h2>
+    <button id="recoverEthButton">Recover ETH</button>
+
+    <h2>Recover Tokens</h2>
+    <input id="recoverTokenAddress" placeholder="Token Address">
+    <button id="recoverTokensButton">Recover Tokens</button>
+
+            </td>
+            <td>
+                <div id="result" class="result"></div>
+            </td>
+        </tr>
+    </table>
+    
+    
+
+    <script>
+        const contractAddress = "0x7F3291692B8383da48Bba646c965617a83BdbDFF";
+        const contractABI = [
+            "function getAmountOutMin(address router, address _tokenIn, address _tokenOut, uint256 _amount) public view returns (uint256)",
+            "function estimateDualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount) external view returns (uint256)",
+            "function dualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount) external",
+            "function estimateTriDexTrade(address _router1, address _router2, address _router3, address _token1, address _token2, address _token3, uint256 _amount) external view returns (uint256)",
+            "function getBalance(address _tokenContractAddress) external view returns (uint256)",
+            "function recoverEth() external",
+            "function recoverTokens(address tokenAddress) external"
+        ];
+
+        let provider, signer, contract;
+
+        async function connectMetaMask() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    provider = new ethers.providers.Web3Provider(window.ethereum, {
+                        name: 'Fantom Opera',
+                        chainId: 250
+                    });
+                    signer = provider.getSigner();
+                    contract = new ethers.Contract(contractAddress, contractABI, signer);
+                    
+                    const address = await signer.getAddress();
+                    document.getElementById('accountInfo').innerText = `Connected: ${address}`;
+                    
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0xfa' }],
+                    });
+                } catch (error) {
+                    console.error("Error connecting to MetaMask", error);
+                    document.getElementById('result').innerText = `Error: ${error.message}`;
+                }
+            } else {
+                alert("Please install MetaMask!");
+            }
+        }
+
+        async function getAmountOutMin() {
+            const router = document.getElementById('routerAddress').value;
+            const tokenIn = document.getElementById('tokenInAddress').value;
+            const tokenOut = document.getElementById('tokenOutAddress').value;
+            const amountIn = document.getElementById('amountIn').value;
+
+            try {
+                const amountOutMin = await contract.getAmountOutMin(router, tokenIn, tokenOut, amountIn);
+                document.getElementById('result').innerText = `Amount Out Min: ${amountOutMin.toString()}`;
+            } catch (error) {
+                document.getElementById('result').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function estimateDualDexTrade() {
+            const router1 = document.getElementById('router1').value;
+            const router2 = document.getElementById('router2').value;
+            const token1 = document.getElementById('token1').value;
+            const token2 = document.getElementById('token2').value;
+            const amount = document.getElementById('amount').value;
+
+            try {
+                const estimate = await contract.estimateDualDexTrade(router1, router2, token1, token2, amount);
+                document.getElementById('result').innerText = `Estimated profit: ${estimate.toString()}`;
+            } catch (error) {
+                document.getElementById('result').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function executeDualDexTrade() {
+            const router1 = document.getElementById('router1').value;
+            const router2 = document.getElementById('router2').value;
+            const token1 = document.getElementById('token1').value;
+            const token2 = document.getElementById('token2').value;
+            const amount = document.getElementById('amount').value;
+
+            try {
+                const tx = await contract.dualDexTrade(router1, router2, token1, token2, amount);
+                await tx.wait();
+                document.getElementById('result').innerText = `Transaction successful: ${tx.hash}`;
+            } catch (error) {
+                document.getElementById('result').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function estimateTriDexTrade() {
+            const router1 = document.getElementById('router1').value;
+            const router2 = document.getElementById('router2').value;
+            const router3 = document.getElementById('router3').value;
+            const token1 = document.getElementById('token1').value;
+            const token2 = document.getElementById('token2').value;
+            const token3 = document.getElementById('token3').value;
+            const amount = document.getElementById('amount').value;
+
+            try {
+                const estimate = await contract.estimateTriDexTrade(router1, router2, router3, token1, token2, token3, amount);
+                document.getElementById('result').innerText = `Estimated profit: ${estimate.toString()}`;
+            } catch (error) {
+                document.getElementById('result').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function getBalance() {
+            const tokenAddress = document.getElementById('tokenAddress').value;
+
+            try {
+                const balance = await contract.getBalance(tokenAddress);
+                document.getElementById('result').innerText = `Token Balance: ${balance.toString()}`;
+            } catch (error) {
+                document.getElementById('result').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function recoverEth() {
+            try {
+                const tx = await contract.recoverEth();
+                await tx.wait();
+                document.getElementById('result').innerText = `ETH recovered successfully: ${tx.hash}`;
+            } catch (error) {
+                document.getElementById('result').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function recoverTokens() {
+            const tokenAddress = document.getElementById('recoverTokenAddress').value;
+
+            try {
+                const tx = await contract.recoverTokens(tokenAddress);
+                await tx.wait();
+                document.getElementById('result').innerText = `Tokens recovered successfully: ${tx.hash}`;
+            } catch (error) {
+                document.getElementById('result').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        document.getElementById('connectButton').addEventListener('click', connectMetaMask);
+        document.getElementById('getAmountOutMinButton').addEventListener('click', getAmountOutMin);
+        document.getElementById('estimateDualDexTradeButton').addEventListener('click', estimateDualDexTrade);
+        document.getElementById('dualDexTradeButton').addEventListener('click', executeDualDexTrade);
+        document.getElementById('estimateTriDexTradeButton').addEventListener('click', estimateTriDexTrade);
+        document.getElementById('getBalanceButton').addEventListener('click', getBalance);
+        document.getElementById('recoverEthButton').addEventListener('click', recoverEth);
+        document.getElementById('recoverTokensButton').addEventListener('click', recoverTokens);
+    </script>
+</body>
+</html>

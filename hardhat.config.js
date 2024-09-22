@@ -11,8 +11,11 @@ module.exports = {
       accounts: [process.env.privateKey],
     },
     fantom: {
-      url: `https://rpc.ftm.tools/`,
+      url: `https://rpc.ftm.tools`,
       accounts: [process.env.privateKey],
+      timeout: 60000,
+      gas: 2100000,
+      gasPrice: 12363792701,
     },
   },
   solidity: {

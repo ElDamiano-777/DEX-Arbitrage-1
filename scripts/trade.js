@@ -51,6 +51,7 @@ const lookForDualTrade = async () => {
   try {
     let tradeSize = balances[targetRoute.token1].balance;
     const amtBack = await arb.estimateDualDexTrade(targetRoute.router1, targetRoute.router2, targetRoute.token1, targetRoute.token2, tradeSize);
+    console.log(amtBack.toString());
     const multiplier = ethers.BigNumber.from(config.minBasisPointsPerTrade+10000);
     const sizeMultiplied = tradeSize.mul(multiplier);
     const divider = ethers.BigNumber.from(10000);
@@ -64,7 +65,9 @@ const lookForDualTrade = async () => {
       await lookForDualTrade();
     }
   } catch (e) {
-    console.log(e);
+    process.stdout.write(".");
+    //console.log("estimateDualDexTrade failed");
+    //console.log(e);
     await lookForDualTrade();	
   }
 }
@@ -82,7 +85,8 @@ const dualTrade = async (router1,router2,baseToken,token2,amount) => {
     inTrade = false;
     await lookForDualTrade();
   } catch (e) {
-    console.log(e);
+    //console.log(e);
+    console.log("NO TRADE");
     inTrade = false;
     await lookForDualTrade();
   }
@@ -91,7 +95,7 @@ const dualTrade = async (router1,router2,baseToken,token2,amount) => {
 const setup = async () => {
   [owner] = await ethers.getSigners();
   console.log(`Owner: ${owner.address}`);
-  const IArb = await ethers.getContractFactory('Arb');
+  const IArb = await ethers.getContractFactory('ArbV2');
   arb = await IArb.attach(config.arbContract);
   balances = {};
   for (let i = 0; i < config.baseAssets.length; i++) {

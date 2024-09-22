@@ -10,11 +10,14 @@ if (network === 'fantom') config = require('./../config/fantom.json');
 const main = async () => {
   [owner] = await ethers.getSigners();
   console.log(`Owner: ${owner.address}`);
-  const IArb = await ethers.getContractFactory('Arb');
+  const IArb = await ethers.getContractFactory('ArbV2');
   arb = await IArb.attach(config.arbContract);
 
   console.log("Eth recover...");
-  await arb.connect(owner).recoverEth();
+  await arb.connect(owner).recoverEth({ 
+    gasPrice: ethers.utils.parseUnits("100", "gwei"),
+    gasLimit: 300000
+  });
 
   for (let i = 0; i < config.baseAssets.length; i++) {
     const asset = config.baseAssets[i];

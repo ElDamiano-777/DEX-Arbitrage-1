@@ -3,7 +3,7 @@ const hre = require("hardhat");
 async function main() {
    [owner] = await ethers.getSigners();
    console.log(`Owner: ${owner.address}`);
-  const contractName = 'Arb';
+  const contractName = 'ArbV2';
   await hre.run("compile");
   const smartContract = await hre.ethers.getContractFactory(contractName);
   const contract = await smartContract.deploy();
