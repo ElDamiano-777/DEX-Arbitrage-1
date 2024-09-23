@@ -2,19 +2,35 @@
   "arbContract": "0x7F3291692B8383da48Bba646c965617a83BdbDFF",
   "minBasisPointsPerTrade": 1,
   "routers": [
-    { "dex": "spookyswap", "address": "0xf491e7b69e4244ad4002bc14e878a34207e38c29" },
-    { "dex": "wigoswap", "address": "0x5023882f4D1EC10544FCB2066abE9C1645E95AA0" },
-    { "dex": "mummyfinanceV1", "address": "0x6b4E5cbCED6E907Ab8525d83Dd3Cd9Ec6BDb62C4" },
-    { "dex": "odosV2", "address": "0xD0c22A5435F4E8E5770C1fAFb5374015FC12F7cD" },
+    {
+      "dex": "spookyswap",
+      "address": "0xf491e7b69e4244ad4002bc14e878a34207e38c29"
+    },
+    {
+      "dex": "wigoswap",
+      "address": "0x5023882f4D1EC10544FCB2066abE9C1645E95AA0"
+    },
+    {
+      "dex": "mummyfinanceV1",
+      "address": "0x6b4E5cbCED6E907Ab8525d83Dd3Cd9Ec6BDb62C4"
+    },
+    {
+      "dex": "odosV2",
+      "address": "0xD0c22A5435F4E8E5770C1fAFb5374015FC12F7cD"
+    },
     { "dex": "tarot", "address": "0x283e62CFe14b352dB8e30A9575481DCbf589Ad98" },
-    { "dex": "pyreswap", "address": "0x29cf2367f188951E8a33b2424B7CEF75C3a38fA8"}
+    {
+      "dex": "pyreswap",
+      "address": "0x29cf2367f188951E8a33b2424B7CEF75C3a38fA8"
+    }
   ],
   "baseAssets": [
-    { "sym": "wftm","address": "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83" }
+    { "sym": "wftm", "address": "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83" }
   ],
   "tokens": [
     { "sym": "WIGO", "address": "0xE992bEAb6659BFF447893641A378FbbF031C5bD6" },
-    { "sym": "wFTM", "address": "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83" }    
+    { "sym": "AXL", "address": "0x467719ad09025fcc6cf6f8311755809d45a5e5f3" },
+    { "sym": "FRAX", "address": "0x853d955acef822db058eb8505911ed77f175b99e" }
   ],
-  "routes": []   
+  "routes": []
 }
