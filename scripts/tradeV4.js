@@ -183,12 +183,14 @@ const lookForDualTrade = async () => {
       );
       console.log('Calling estimateDualDexTrade...');
     
+      const actualGasLimit = await getPrice();
       const amtBack = await arb.callStatic.estimateDualDexTrade(
         targetRoute.router1,
         targetRoute.router2,
         targetRoute.token1,
         targetRoute.token2,
-        ethers.BigNumber.from(tradeSize)
+        ethers.BigNumber.from(tradeSize),
+        { gasLimit: actualGasLimit.recommendedPrice }
       );
       console.log('Estimation successful, amount back:', amtBack.toString());
 
@@ -199,7 +201,7 @@ const lookForDualTrade = async () => {
           targetRoute.router2,
           targetRoute.token1,
           targetRoute.token2,
-          tradeSize
+          ethers.BigNumber.from(tradeSize)
         );
       }
     } catch (error) {
@@ -220,10 +222,11 @@ const dualTrade = async (router1, router2, baseToken, token2, amount) => {
     inTrade = true;
     console.log('> Führe dualTrade aus...');
 
+    const actualGasLimit = await getPrice();
     const tx = await arb
       .connect(owner)
       .dualDexTrade(router1, router2, baseToken, token2, amount, {
-        gasLimit: manualGasLimit,
+        gasLimit: actualGasLimit.recommendedPrice,
       });
     console.log('Transaktion gesendet. Warte auf Bestätigung...');
     const receipt = await tx.wait();
@@ -237,6 +240,15 @@ const dualTrade = async (router1, router2, baseToken, token2, amount) => {
     inTrade = false;
   }
 };
+
+const getPrice = async () => {
+  const gasPrice = await ethers.provider.getGasPrice()
+	//{gasPrice: 1000000000001}
+	console.log(`Gas Price: ${gasPrice.toString()}`);
+	const recommendedPrice = gasPrice.mul(10).div(9);
+	console.log(`Recommended Price: ${recommendedPrice.toString()}`);
+  return { gasPrice, recommendedPrice };
+}
 
 const setup = async () => {
   [owner] = await ethers.getSigners();
