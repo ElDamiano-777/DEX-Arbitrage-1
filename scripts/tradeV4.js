@@ -139,11 +139,11 @@ const token1Contract = await ethers.getContractAt("IERC20", targetRoute.token1, 
       console.log("Parameters:", targetRoute.router1, targetRoute.router2, targetRoute.token1, targetRoute.token2, tradeSize.toString());
       console.log("Calling estimateDualDexTrade...");
       const amtBack = await arb.callStatic.estimateDualDexTrade(
-        targetRoute.router1,
-        targetRoute.router2,
-        targetRoute.token1,
-        targetRoute.token2,
-        tradeSize
+        "0xf491e7b69e4244ad4002bc14e878a34207e38c29",
+        "0xf491e7b69e4244ad4002bc14e878a34207e38c29",
+        "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
+        "0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE",
+        ethers.BigNumber.from(tradeSize)
       );
       console.log("Estimation successful, amount back:", amtBack.toString());
 

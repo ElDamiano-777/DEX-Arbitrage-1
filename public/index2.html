@@ -107,7 +107,7 @@
 
     <script>
       let provider, signer, contract;
-      const contractAddress = 'YOUR_CONTRACT_ADDRESS_HERE';
+      const contractAddress = '0x3d11b03AEE1ccF5AFc6094eD0bb8884D88c49ea1';
       const contractABI = [
         'function swap(address router, address _tokenIn, address _tokenOut, uint256 _amount)',
         'function getAmountOutMin(address router, address _tokenIn, address _tokenOut, uint256 _amount) view returns (uint256)',
@@ -258,8 +258,8 @@
       async function getBalance() {
         try {
           const tokenAddress = document.getElementById('balanceToken').value;
-          the balance = await contract.getBalance(tokenAddress);
-          showResult('Balance: ' + ethers.utils.formatUnits(balance, 18));
+          const balance = await contract.getBalance(tokenAddress);
+          showResult('Balance: ' + balance);
         } catch (error) {
           showResult('Get balance failed: ' + error.message);
         }
