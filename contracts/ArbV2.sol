@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+//import '@uniswap/v2-periphery/contracts/libraries/UniswapV2Library.sol';
+//import '@uniswap/v3-periphery/contracts/libraries/UniswapV2Library.sol';
 
 // Schnittstellen für ERC20-Token und Uniswap-Router
 interface IERC20 {
@@ -64,8 +66,7 @@ contract ArbV2 is Ownable {
         uint256 startBalance = IERC20(_token1).balanceOf(address(this));
         
         // Überprüfe Liquidität vor dem Trade
-        (uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(_router1).getReserves();
-        require(reserve0 > 0 && reserve1 > 0, "Insufficient liquidity");
+        //(uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(_router1).getReserves();
 
         swap(_router1, _token1, _token2, _amount);
         uint256 token2Balance = IERC20(_token2).balanceOf(address(this));
