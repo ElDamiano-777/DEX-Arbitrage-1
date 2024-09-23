@@ -1,7 +1,7 @@
-const hre = require("hardhat");
+const hre = require('hardhat');
 const ethers = hre.ethers;
-const fs = require("fs");
-require("dotenv").config();
+const fs = require('fs');
+require('dotenv').config();
 
 let config, arb, owner, inTrade, balances;
 const network = hre.network.name;
@@ -11,27 +11,31 @@ if (network === 'fantom') config = require('./../config/fantom.json');
 
 console.log(`${config.routes.length} Routen geladen`);
 
-const manualGasLimit = ethers.utils.parseUnits('99816674451', 'wei');  // Anpassen Sie diesen Wert bei Bedarf
-
+const manualGasLimit = ethers.utils.parseUnits('99816674451', 'wei'); // Anpassen Sie diesen Wert bei Bedarf
 
 //console.log("manualGasLimit:", manualGasLimit.toString());
 
 const main = async () => {
   await setup();
   await lookForDualTrade();
-}
+};
 
 const searchForRoutes = () => {
-  console.log("Suche neue Routen...");
+  console.log('Suche neue Routen...');
   const targetRoute = {
-    router1: config.routers[Math.floor(Math.random() * config.routers.length)].address,
-    router2: config.routers[Math.floor(Math.random() * config.routers.length)].address,
-    token1: config.baseAssets[Math.floor(Math.random() * config.baseAssets.length)].address,
-    token2: config.tokens[Math.floor(Math.random() * config.tokens.length)].address
+    router1:
+      config.routers[Math.floor(Math.random() * config.routers.length)].address,
+    router2:
+      config.routers[Math.floor(Math.random() * config.routers.length)].address,
+    token1:
+      config.baseAssets[Math.floor(Math.random() * config.baseAssets.length)]
+        .address,
+    token2:
+      config.tokens[Math.floor(Math.random() * config.tokens.length)].address,
   };
   console.log(targetRoute);
   return targetRoute;
-}
+};
 
 let goodCount = 0;
 const useGoodRoutes = () => {
@@ -41,58 +45,71 @@ const useGoodRoutes = () => {
     router1: route[0],
     router2: route[1],
     token1: route[2],
-    token2: route[3]
+    token2: route[3],
   };
-}
+};
 
 const checkNetworkStatus = async () => {
   try {
-    console.log("Attempting to get network information...");
+    console.log('Attempting to get network information...');
     const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
     const network = await provider.getNetwork();
-    console.log("Network:", network);
+    console.log('Network:', network);
     const blockNumber = await provider.getBlockNumber();
-    console.log("Current block number:", blockNumber);
+    console.log('Current block number:', blockNumber);
     return true;
   } catch (error) {
-    console.error("Network problem:", error);
+    console.error('Network problem:', error);
     return false;
   }
-}
+};
 
-const checkAndApproveAllowance = async (tokenAddress, spenderAddress, amount) => {
-  const tokenContract = await ethers.getContractAt("IERC20", tokenAddress, owner);
-  const ownerAddress = await owner.getAddress(); // Holen Sie die Adresse des Owners
+const checkAndApproveAllowance = async (
+  tokenAddress,
+  spenderAddress,
+  amount
+) => {
+  const tokenContract = await ethers.getContractAt(
+    'IERC20',
+    tokenAddress,
+    owner
+  );
+  const ownerAddress = await owner.getAddress();
 
   console.log(`Checking allowance for ${tokenAddress}`);
   const allowance = await tokenContract.allowance(ownerAddress, spenderAddress);
-  console.log("Current allowance:", allowance.toString());
+  console.log('Current allowance:', allowance.toString());
 
   if (allowance.lt(amount)) {
-    console.log(`Erteile Genehmigung für ${tokenAddress} an ${spenderAddress}`);
-    
-    // Bereiten Sie die Genehmigungstransaktion vor
-    const txRequest = await tokenContract.populateTransaction.approve(spenderAddress, ethers.constants.MaxUint256);
+    console.log(`Granting approval for ${tokenAddress} to ${spenderAddress}`);
+    const approveTx = await tokenContract.approve(
+      spenderAddress,
+      ethers.constants.MaxUint256
+    );
+    const txResult = await approveTx.wait();
+    console.log('Approval granted.', txResult);
 
-    // Signieren der Transaktion 
-    //console.log("Signiere Transaktion...");
-    //const signedTx = await owner.signTransaction(txRequest);
-
-
-    // Senden der signierten Transaktion
-    //console.log("Sende Transaktion...");
-    //const txResponse = await owner.provider.sendTransaction();
-    //await txResponse.wait();
-    console.log("Genehmigung erteilt.");
-
-    // Überprüfen Sie die Genehmigung erneut
-    const newAllowance = await tokenContract.allowance(ownerAddress, spenderAddress);
-    console.log("New allowance:", newAllowance.toString());
+    const newAllowance = await tokenContract.allowance(
+      ownerAddress,
+      spenderAddress
+    );
+    console.log('New allowance:', newAllowance.toString());
+    if (newAllowance.lt(amount)) {
+      throw new Error(
+        'Approval transaction failed to increase allowance sufficiently.'
+      );
+    }
+  } else {
+    console.log('Sufficient allowance already granted.');
   }
 };
 
 const checkSufficientBalance = async (tokenAddress, amount) => {
-  const tokenContract = await ethers.getContractAt("IERC20", tokenAddress, owner);
+  const tokenContract = await ethers.getContractAt(
+    'IERC20',
+    tokenAddress,
+    owner
+  );
   const balance = await tokenContract.balanceOf(arb.address);
   return balance.gte(amount);
 };
@@ -100,44 +117,76 @@ const checkSufficientBalance = async (tokenAddress, amount) => {
 const lookForDualTrade = async () => {
   while (true) {
     try {
-      const targetRoute = config.routes.length > 0 ? useGoodRoutes() : searchForRoutes();
+      const targetRoute =
+        config.routes.length > 0 ? useGoodRoutes() : searchForRoutes();
       const tradeSize = balances[targetRoute.token1].balance;
 
       if (tradeSize.lte(ethers.constants.Zero)) {
-        console.log("Handelsgröße zu klein, überspringe...");
+        console.log('Handelsgröße zu klein, überspringe...');
         continue;
       }
 
-      console.log("Prüfe Parameter vor Gasschätzung:", targetRoute, tradeSize.toString());
-      console.log("Arb-Kontrakt-Adresse:", arb.address);
+      console.log(
+        'Prüfe Parameter vor Gasschätzung:',
+        targetRoute,
+        tradeSize.toString()
+      );
+      console.log('Arb-Kontrakt-Adresse:', arb.address);
 
       const networkStatus = await checkNetworkStatus();
       if (!networkStatus) {
-        console.log("Network check failed, retrying...");
+        console.log('Network check failed, retrying...');
         continue;
       }
 
       const balance = await ethers.provider.getBalance(owner.address);
-      console.log("Aktueller Kontosaldo:", ethers.utils.formatEther(balance));
+      console.log('Aktueller Kontosaldo:', ethers.utils.formatEther(balance));
 
-const token1Contract = await ethers.getContractAt("IERC20", targetRoute.token1, owner);
+      const token1Contract = await ethers.getContractAt(
+        'IERC20',
+        targetRoute.token1,
+        owner
+      );
       const token1Balance = await token1Contract.balanceOf(arb.address);
-      console.log("Token1 Guthaben des Arb-Kontrakts:", token1Balance.toString());
+      console.log(
+        'Token1 Guthaben des Arb-Kontrakts:',
+        token1Balance.toString()
+      );
 
       // Überprüfe und erteile Genehmigungen
-      await checkAndApproveAllowance(targetRoute.token1, targetRoute.router1, tradeSize);
-      await checkAndApproveAllowance(targetRoute.token2, targetRoute.router2, ethers.constants.MaxUint256);
+      await checkAndApproveAllowance(
+        targetRoute.token1,
+        targetRoute.router1,
+        tradeSize
+      );
+      await checkAndApproveAllowance(
+        targetRoute.token2,
+        targetRoute.router2,
+        ethers.constants.MaxUint256
+      );
 
       // Überprüfe ausreichendes Guthaben
       if (!(await checkSufficientBalance(targetRoute.token1, tradeSize))) {
-        console.log("Unzureichendes Guthaben für den Handel");
+        console.log('Unzureichendes Guthaben für den Handel');
         continue;
       } else {
-        console.log("Guthaben vorhanden");
+        console.log('Guthaben vorhanden');
       }
 
-      console.log("Parameters:", targetRoute.router1, targetRoute.router2, targetRoute.token1, targetRoute.token2, tradeSize.toString());
-      console.log("Calling estimateDualDexTrade...");
+      console.log(
+        'Parameters:',
+        targetRoute.router1,
+        targetRoute.router2,
+        targetRoute.token1,
+        targetRoute.token2,
+        tradeSize.toString()
+      );
+      console.log('Calling estimateDualDexTrade...');
+      console.log(
+        '++++++++++++ lookForDualTrade  --  manualGasLimit:',
+        manualGasLimit
+      );
+      console.log('++++++++++++ #############:');
       const amtBack = await arb.callStatic.estimateDualDexTrade(
         targetRoute.router1,
         targetRoute.router2,
@@ -146,23 +195,29 @@ const token1Contract = await ethers.getContractAt("IERC20", targetRoute.token1, 
         ethers.BigNumber.from(tradeSize),
         { gasLimit: manualGasLimit }
       );
-      console.log("Estimation successful, amount back:", amtBack.toString());
+      console.log('Estimation successful, amount back:', amtBack.toString());
 
       if (amtBack.gt(tradeSize)) {
-        console.log("Trade wird ausgeführt...");
-        await dualTrade(targetRoute.router1, targetRoute.router2, targetRoute.token1, targetRoute.token2, tradeSize);
+        console.log('Trade wird ausgeführt...');
+        await dualTrade(
+          targetRoute.router1,
+          targetRoute.router2,
+          targetRoute.token1,
+          targetRoute.token2,
+          tradeSize
+        );
       }
     } catch (error) {
-      console.error("Fehler in lookForDualTrade:", error);
+      console.error('Fehler in lookForDualTrade:', error);
     }
 
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   }
-}
+};
 
 const dualTrade = async (router1, router2, baseToken, token2, amount) => {
   if (inTrade) {
-    console.log("Bereits im Handel, überspringe...");
+    console.log('Bereits im Handel, überspringe...');
     return false;
   }
 
@@ -170,18 +225,23 @@ const dualTrade = async (router1, router2, baseToken, token2, amount) => {
     inTrade = true;
     console.log('> Führe dualTrade aus...');
 
-    const tx = await arb.connect(owner).dualDexTrade(router1, router2, baseToken, token2, amount, {
-      gasLimit: manualGasLimit
-    });
+    const tx = await arb
+      .connect(owner)
+      .dualDexTrade(router1, router2, baseToken, token2, amount, {
+        gasLimit: manualGasLimit,
+      });
     console.log('Transaktion gesendet. Warte auf Bestätigung...');
     const receipt = await tx.wait();
-    console.log('Transaktion bestätigt. Gas verwendet:', receipt.gasUsed.toString());
+    console.log(
+      'Transaktion bestätigt. Gas verwendet:',
+      receipt.gasUsed.toString()
+    );
   } catch (e) {
-    console.error("Fehler bei dualTrade:", e);
+    console.error('Fehler bei dualTrade:', e);
   } finally {
     inTrade = false;
   }
-}
+};
 
 const setup = async () => {
   [owner] = await ethers.getSigners();
@@ -191,31 +251,47 @@ const setup = async () => {
   balances = {};
 
   for (const asset of config.baseAssets) {
-    const assetToken = await ethers.getContractFactory('WETH9').then(f => f.attach(asset.address));
+    const assetToken = await ethers
+      .getContractFactory('WETH9')
+      .then((f) => f.attach(asset.address));
     const balance = await assetToken.balanceOf(config.arbContract);
     console.log(`${asset.sym} ${balance.toString()}`);
-    balances[asset.address] = { sym: asset.sym, balance, startBalance: balance };
+    balances[asset.address] = {
+      sym: asset.sym,
+      balance,
+      startBalance: balance,
+    };
   }
 
   const ownerBalance = await ethers.provider.getBalance(owner.address);
-  console.log(`Kontostand des Besitzers: ${ethers.utils.formatEther(ownerBalance)} FTM`);
+  console.log(
+    `Kontostand des Besitzers: ${ethers.utils.formatEther(ownerBalance)} FTM`
+  );
 
   setTimeout(() => {
     setInterval(logResults, 600000);
     logResults();
   }, 120000);
-}
+};
 
 const logResults = async () => {
   console.log(`############# LOGS #############`);
   for (const asset of config.baseAssets) {
-    const assetToken = await ethers.getContractFactory('WETH9').then(f => f.attach(asset.address));
-    balances[asset.address].balance = await assetToken.balanceOf(config.arbContract);
-    const diff = balances[asset.address].balance.sub(balances[asset.address].startBalance);
-    const basisPoints = diff.mul(10000).div(balances[asset.address].startBalance);
+    const assetToken = await ethers
+      .getContractFactory('WETH9')
+      .then((f) => f.attach(asset.address));
+    balances[asset.address].balance = await assetToken.balanceOf(
+      config.arbContract
+    );
+    const diff = balances[asset.address].balance.sub(
+      balances[asset.address].startBalance
+    );
+    const basisPoints = diff
+      .mul(10000)
+      .div(balances[asset.address].startBalance);
     console.log(`# ${asset.sym}: ${basisPoints.toString()}bps`);
   }
-}
+};
 
 process.on('uncaughtException', (err) => {
   console.error('Unbehandelte Ausnahme:', err);
