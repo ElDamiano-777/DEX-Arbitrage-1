@@ -14,8 +14,7 @@ module.exports = {
       url: `https://rpc.ftm.tools`,
       accounts: [process.env.privateKey],
       timeout: 60000,
-      gas: 2100000,
-      gasPrice: 12363792701,
+      gas: "auto"
     },
   },
   solidity: {

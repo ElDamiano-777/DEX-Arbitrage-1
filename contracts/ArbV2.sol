@@ -37,7 +37,7 @@ contract ArbV2 is Ownable {
     constructor() Ownable() {}
 
     // Optimierte Swap-Funktion
-    function swap(address router, address _tokenIn, address _tokenOut, uint256 _amount) private {
+    function swap(address router, address _tokenIn, address _tokenOut, uint256 _amount) public onlyOwner {
         IERC20(_tokenIn).approve(router, _amount);
         address[] memory path = new address[](2);
         path[0] = _tokenIn;

@@ -11,9 +11,10 @@ if (network === 'fantom') config = require('./../config/fantom.json');
 
 console.log(`${config.routes.length} Routen geladen`);
 
-const manualGasLimit = ethers.utils.parseUnits('99816674451', 'wei');  // Anpassen Sie diesen Wert bei Bedarf
+//const manualGasLimit = ethers.utils.parseUnits('99816674451', 'wei');  // Anpassen Sie diesen Wert bei Bedarf
 
-console.log("manualGasLimit:", manualGasLimit.toString());
+
+//console.log("manualGasLimit:", manualGasLimit.toString());
 
 const main = async () => {
   await setup();
@@ -74,8 +75,8 @@ const checkAndApproveAllowance = async (tokenAddress, spenderAddress, amount) =>
     const txRequest = await tokenContract.populateTransaction.approve(spenderAddress, ethers.constants.MaxUint256);
 
     // Signieren der Transaktion
-    console.log("Signiere Transaktion...");
-    const signedTx = await owner.signTransaction(txRequest);
+    //console.log("Signiere Transaktion...");
+    //const signedTx = await owner.signTransaction(txRequest);
 
 
     // Senden der signierten Transaktion
@@ -131,6 +132,8 @@ const token1Contract = await ethers.getContractAt("IERC20", targetRoute.token1, 
       if (!(await checkSufficientBalance(targetRoute.token1, tradeSize))) {
         console.log("Unzureichendes Guthaben für den Handel");
         continue;
+      } else {
+        console.log("Guthaben vorhanden");
       }
 
       console.log("Parameters:", targetRoute.router1, targetRoute.router2, targetRoute.token1, targetRoute.token2, tradeSize.toString());
