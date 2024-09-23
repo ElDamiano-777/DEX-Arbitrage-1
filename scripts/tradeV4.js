@@ -183,7 +183,7 @@ const lookForDualTrade = async () => {
       );
       console.log('Calling estimateDualDexTrade...');
     
-      const actualGasLimit = await getPrice();
+      //const actualGasLimit = await getPrice();
       const amtBack = await arb.callStatic.estimateDualDexTrade(
         targetRoute.router1,
         targetRoute.router2,
@@ -226,7 +226,7 @@ const dualTrade = async (router1, router2, baseToken, token2, amount) => {
     inTrade = true;
     console.log('> Führe dualTrade aus...');
 
-    const actualGasLimit = await getPrice();
+    //const actualGasLimit = await getPrice();
     const tx = await arb
       .connect(owner)
       .dualDexTrade(router1, router2, baseToken, token2, amount, {
