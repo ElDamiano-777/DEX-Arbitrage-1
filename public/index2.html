@@ -74,6 +74,16 @@
       <button onclick="estimateDualDexTrade()">Estimate</button>
 
       <h2>Dual Dex Trade</h2>
+      <input id="dualRouter1" placeholder="Router 1 Address" />
+      <input id="dualRouter2" placeholder="Router 2 Address" />
+      <input id="dualToken1" placeholder="Token 1 Address" />
+      <input id="dualToken2" placeholder="Token 2 Address" />
+      <input
+        id="dualAmount"
+        type="number"
+        step="0.000000000000000001"
+        placeholder="Amount"
+      />
       <button onclick="dualDexTrade()">Execute Dual Dex Trade</button>
 
       <h2>Estimate Tri Dex Trade</h2>
@@ -123,9 +133,16 @@
         if (typeof window.ethereum !== 'undefined') {
           try {
             await window.ethereum.request({ method: 'eth_requestAccounts' });
-            provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+            provider = new ethers.providers.Web3Provider(
+              window.ethereum,
+              'any'
+            );
             signer = provider.getSigner();
-            contract = new ethers.Contract(contractAddress, contractABI, signer);
+            contract = new ethers.Contract(
+              contractAddress,
+              contractABI,
+              signer
+            );
 
             const network = await provider.getNetwork();
             if (network.chainId !== 250) {
@@ -134,7 +151,8 @@
             }
 
             document.getElementById('connectWallet').style.display = 'none';
-            document.getElementById('contractInteraction').style.display = 'block';
+            document.getElementById('contractInteraction').style.display =
+              'block';
             showResult('Wallet connected successfully');
           } catch (error) {
             showResult('Failed to connect wallet: ' + error.message);
@@ -165,12 +183,19 @@
         try {
           const router = document.getElementById('amountOutMinRouter').value;
           const tokenIn = document.getElementById('amountOutMinTokenIn').value;
-          const tokenOut = document.getElementById('amountOutMinTokenOut').value;
+          const tokenOut = document.getElementById(
+            'amountOutMinTokenOut'
+          ).value;
           const amount = ethers.utils.parseUnits(
             document.getElementById('amountOutMinAmount').value,
             18
           );
-          const result = await contract.getAmountOutMin(router, tokenIn, tokenOut, amount);
+          const result = await contract.getAmountOutMin(
+            router,
+            tokenIn,
+            tokenOut,
+            amount
+          );
           showResult('Amount Out Min: ' + ethers.utils.formatUnits(result, 18));
         } catch (error) {
           showResult('Get Amount Out Min failed: ' + error.message);
