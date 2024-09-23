@@ -11,7 +11,7 @@ if (network === 'fantom') config = require('./../config/fantom.json');
 
 console.log(`${config.routes.length} Routen geladen`);
 
-const manualGasLimit = ethers.utils.parseUnits('99816674451', 'wei'); // Anpassen Sie diesen Wert bei Bedarf
+const manualGasLimit = ethers.utils.parseUnits('816674451', 'wei'); // Anpassen Sie diesen Wert bei Bedarf
 
 //console.log("manualGasLimit:", manualGasLimit.toString());
 
