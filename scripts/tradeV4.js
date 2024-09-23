@@ -74,7 +74,7 @@ const checkAndApproveAllowance = async (tokenAddress, spenderAddress, amount) =>
     // Bereiten Sie die Genehmigungstransaktion vor
     const txRequest = await tokenContract.populateTransaction.approve(spenderAddress, ethers.constants.MaxUint256);
 
-    // Signieren der Transaktion
+    // Signieren der Transaktion 
     //console.log("Signiere Transaktion...");
     //const signedTx = await owner.signTransaction(txRequest);
 
