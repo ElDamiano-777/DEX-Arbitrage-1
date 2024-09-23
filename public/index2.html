@@ -123,16 +123,9 @@
         if (typeof window.ethereum !== 'undefined') {
           try {
             await window.ethereum.request({ method: 'eth_requestAccounts' });
-            provider = new ethers.providers.Web3Provider(window.ethereum, {
-              name: 'Fantom Opera',
-              chainId: 250,
-            });
+            provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
             signer = provider.getSigner();
-            contract = new ethers.Contract(
-              contractAddress,
-              contractABI,
-              signer
-            );
+            contract = new ethers.Contract(contractAddress, contractABI, signer);
 
             const network = await provider.getNetwork();
             if (network.chainId !== 250) {
@@ -141,8 +134,7 @@
             }
 
             document.getElementById('connectWallet').style.display = 'none';
-            document.getElementById('contractInteraction').style.display =
-              'block';
+            document.getElementById('contractInteraction').style.display = 'block';
             showResult('Wallet connected successfully');
           } catch (error) {
             showResult('Failed to connect wallet: ' + error.message);
@@ -173,19 +165,12 @@
         try {
           const router = document.getElementById('amountOutMinRouter').value;
           const tokenIn = document.getElementById('amountOutMinTokenIn').value;
-          const tokenOut = document.getElementById(
-            'amountOutMinTokenOut'
-          ).value;
+          const tokenOut = document.getElementById('amountOutMinTokenOut').value;
           const amount = ethers.utils.parseUnits(
             document.getElementById('amountOutMinAmount').value,
             18
           );
-          const result = await contract.getAmountOutMin(
-            router,
-            tokenIn,
-            tokenOut,
-            amount
-          );
+          const result = await contract.getAmountOutMin(router, tokenIn, tokenOut, amount);
           showResult('Amount Out Min: ' + ethers.utils.formatUnits(result, 18));
         } catch (error) {
           showResult('Get Amount Out Min failed: ' + error.message);
@@ -273,7 +258,7 @@
       async function getBalance() {
         try {
           const tokenAddress = document.getElementById('balanceToken').value;
-          const balance = await contract.getBalance(tokenAddress);
+          the balance = await contract.getBalance(tokenAddress);
           showResult('Balance: ' + ethers.utils.formatUnits(balance, 18));
         } catch (error) {
           showResult('Get balance failed: ' + error.message);
