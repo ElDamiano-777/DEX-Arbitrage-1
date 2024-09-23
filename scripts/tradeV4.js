@@ -182,18 +182,13 @@ const lookForDualTrade = async () => {
         tradeSize.toString()
       );
       console.log('Calling estimateDualDexTrade...');
-      console.log(
-        '++++++++++++ lookForDualTrade  --  manualGasLimit:',
-        manualGasLimit
-      );
-      console.log('++++++++++++ #############:');
+    
       const amtBack = await arb.callStatic.estimateDualDexTrade(
         targetRoute.router1,
         targetRoute.router2,
         targetRoute.token1,
         targetRoute.token2,
-        ethers.BigNumber.from(tradeSize),
-        { gasLimit: manualGasLimit }
+        ethers.BigNumber.from(tradeSize)
       );
       console.log('Estimation successful, amount back:', amtBack.toString());
 
@@ -208,7 +203,7 @@ const lookForDualTrade = async () => {
         );
       }
     } catch (error) {
-      console.error('Fehler in lookForDualTrade:', error);
+      console.error("Route nicht bekannt oder Liqidität nicht vorhanden!");
     }
 
     await new Promise((resolve) => setTimeout(resolve, 5000));

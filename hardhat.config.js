@@ -13,7 +13,6 @@ module.exports = {
     fantom: {
       url: `https://rpc.ftm.tools`,
       accounts: [process.env.privateKey],
-      timeout: 60000,
       gas: "auto"
     },
   },
