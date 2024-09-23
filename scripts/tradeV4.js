@@ -87,7 +87,7 @@ const checkAndApproveAllowance = async (
       ethers.constants.MaxUint256
     );
     const txResult = await approveTx.wait();
-    console.log('Approval granted.', txResult);
+    console.log('Approval granted.');
 
     const newAllowance = await tokenContract.allowance(
       ownerAddress,
@@ -190,9 +190,13 @@ const lookForDualTrade = async () => {
         targetRoute.token1,
         targetRoute.token2,
         ethers.BigNumber.from(tradeSize),
-        { gasLimit: actualGasLimit.recommendedPrice }
+        //{ gasLimit: actualGasLimit.recommendedPrice }
       );
       console.log('Estimation successful, amount back:', amtBack.toString());
+
+      if (config.routes.length === 0) {
+        fs.appendFile(`./data/${network}RouteLog.txt`, `["${targetRoute.router1}","${targetRoute.router2}","${targetRoute.token1}","${targetRoute.token2}"],\n`, () => {});
+      }
 
       if (amtBack.gt(tradeSize)) {
         console.log('Trade wird ausgeführt...');
@@ -226,7 +230,7 @@ const dualTrade = async (router1, router2, baseToken, token2, amount) => {
     const tx = await arb
       .connect(owner)
       .dualDexTrade(router1, router2, baseToken, token2, amount, {
-        gasLimit: actualGasLimit.recommendedPrice,
+        //gasLimit: actualGasLimit.recommendedPrice,
       });
     console.log('Transaktion gesendet. Warte auf Bestätigung...');
     const receipt = await tx.wait();
