@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArbV2 Contract Interface</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      button {
+        margin: 5px;
+        padding: 10px;
+      }
+      input {
+        margin: 5px;
+        padding: 5px;
+        width: 300px;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f0f0f0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ArbV2 Contract Interface</h1>
+
+    <div id="connectWallet">
+      <button onclick="connectWallet()">Connect to MetaMask</button>
+    </div>
+
+    <div id="contractInteraction" style="display: none">
+      <h2>Swap</h2>
+      <input id="swapRouter" placeholder="Router Address" />
+      <input id="swapTokenIn" placeholder="Token In Address" />
+      <input id="swapTokenOut" placeholder="Token Out Address" />
+      <input
+        id="swapAmount"
+        type="number"
+        step="0.000000000000000001"
+        placeholder="Amount"
+      />
+      <button onclick="swap()">Swap</button>
+
+      <h2>Get Amount Out Min</h2>
+      <input id="amountOutMinRouter" placeholder="Router Address" />
+      <input id="amountOutMinTokenIn" placeholder="Token In Address" />
+      <input id="amountOutMinTokenOut" placeholder="Token Out Address" />
+      <input
+        id="amountOutMinAmount"
+        type="number"
+        step="0.000000000000000001"
+        placeholder="Amount"
+      />
+      <button onclick="getAmountOutMin()">Get Amount Out Min</button>
+
+      <h2>Estimate Dual Dex Trade</h2>
+      <input id="dualRouter1" placeholder="Router 1 Address" />
+      <input id="dualRouter2" placeholder="Router 2 Address" />
+      <input id="dualToken1" placeholder="Token 1 Address" />
+      <input id="dualToken2" placeholder="Token 2 Address" />
+      <input
+        id="dualAmount"
+        type="number"
+        step="0.000000000000000001"
+        placeholder="Amount"
+      />
+      <button onclick="estimateDualDexTrade()">Estimate</button>
+
+      <h2>Dual Dex Trade</h2>
+      <button onclick="dualDexTrade()">Execute Dual Dex Trade</button>
+
+      <h2>Estimate Tri Dex Trade</h2>
+      <input id="triRouter1" placeholder="Router 1 Address" />
+      <input id="triRouter2" placeholder="Router 2 Address" />
+      <input id="triRouter3" placeholder="Router 3 Address" />
+      <input id="triToken1" placeholder="Token 1 Address" />
+      <input id="triToken2" placeholder="Token 2 Address" />
+      <input id="triToken3" placeholder="Token 3 Address" />
+      <input
+        id="triAmount"
+        type="number"
+        step="0.000000000000000001"
+        placeholder="Amount"
+      />
+      <button onclick="estimateTriDexTrade()">Estimate Tri Dex Trade</button>
+
+      <h2>Get Balance</h2>
+      <input id="balanceToken" placeholder="Token Address" />
+      <button onclick="getBalance()">Get Balance</button>
+
+      <h2>Recover ETH</h2>
+      <button onclick="recoverEth()">Recover ETH</button>
+
+      <h2>Recover Tokens</h2>
+      <input id="recoverTokenAddress" placeholder="Token Address" />
+      <button onclick="recoverTokens()">Recover Tokens</button>
+    </div>
+
+    <div id="result" class="result"></div>
+
+    <script>
+      let provider, signer, contract;
+      const contractAddress = 'YOUR_CONTRACT_ADDRESS_HERE';
+      const contractABI = [
+        'function swap(address router, address _tokenIn, address _tokenOut, uint256 _amount)',
+        'function getAmountOutMin(address router, address _tokenIn, address _tokenOut, uint256 _amount) view returns (uint256)',
+        'function estimateDualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount) view returns (uint256)',
+        'function dualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount)',
+        'function estimateTriDexTrade(address _router1, address _router2, address _router3, address _token1, address _token2, address _token3, uint256 _amount) view returns (uint256)',
+        'function getBalance(address _tokenContractAddress) view returns (uint256)',
+        'function recoverEth()',
+        'function recoverTokens(address tokenAddress)',
+      ];
+
+      async function connectWallet() {
+        if (typeof window.ethereum !== 'undefined') {
+          try {
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            provider = new ethers.providers.Web3Provider(window.ethereum, {
+              name: 'Fantom Opera',
+              chainId: 250,
+            });
+            signer = provider.getSigner();
+            contract = new ethers.Contract(
+              contractAddress,
+              contractABI,
+              signer
+            );
+
+            const network = await provider.getNetwork();
+            if (network.chainId !== 250) {
+              showResult('Please switch to Fantom Opera network in MetaMask');
+              return;
+            }
+
+            document.getElementById('connectWallet').style.display = 'none';
+            document.getElementById('contractInteraction').style.display =
+              'block';
+            showResult('Wallet connected successfully');
+          } catch (error) {
+            showResult('Failed to connect wallet: ' + error.message);
+          }
+        } else {
+          showResult('MetaMask is not installed');
+        }
+      }
+
+      async function swap() {
+        try {
+          const router = document.getElementById('swapRouter').value;
+          const tokenIn = document.getElementById('swapTokenIn').value;
+          const tokenOut = document.getElementById('swapTokenOut').value;
+          const amount = ethers.utils.parseUnits(
+            document.getElementById('swapAmount').value,
+            18
+          );
+          const tx = await contract.swap(router, tokenIn, tokenOut, amount);
+          await tx.wait();
+          showResult('Swap executed successfully');
+        } catch (error) {
+          showResult('Swap failed: ' + error.message);
+        }
+      }
+
+      async function getAmountOutMin() {
+        try {
+          const router = document.getElementById('amountOutMinRouter').value;
+          const tokenIn = document.getElementById('amountOutMinTokenIn').value;
+          const tokenOut = document.getElementById(
+            'amountOutMinTokenOut'
+          ).value;
+          const amount = ethers.utils.parseUnits(
+            document.getElementById('amountOutMinAmount').value,
+            18
+          );
+          const result = await contract.getAmountOutMin(
+            router,
+            tokenIn,
+            tokenOut,
+            amount
+          );
+          showResult('Amount Out Min: ' + ethers.utils.formatUnits(result, 18));
+        } catch (error) {
+          showResult('Get Amount Out Min failed: ' + error.message);
+        }
+      }
+
+      async function estimateDualDexTrade() {
+        try {
+          const router1 = document.getElementById('dualRouter1').value;
+          const router2 = document.getElementById('dualRouter2').value;
+          const token1 = document.getElementById('dualToken1').value;
+          const token2 = document.getElementById('dualToken2').value;
+          const amount = ethers.utils.parseUnits(
+            document.getElementById('dualAmount').value,
+            18
+          );
+          const estimate = await contract.estimateDualDexTrade(
+            router1,
+            router2,
+            token1,
+            token2,
+            amount
+          );
+          showResult(
+            'Estimated profit: ' + ethers.utils.formatUnits(estimate, 18)
+          );
+        } catch (error) {
+          showResult('Estimation failed: ' + error.message);
+        }
+      }
+
+      async function dualDexTrade() {
+        try {
+          const router1 = document.getElementById('dualRouter1').value;
+          const router2 = document.getElementById('dualRouter2').value;
+          const token1 = document.getElementById('dualToken1').value;
+          const token2 = document.getElementById('dualToken2').value;
+          const amount = ethers.utils.parseUnits(
+            document.getElementById('dualAmount').value,
+            18
+          );
+          const tx = await contract.dualDexTrade(
+            router1,
+            router2,
+            token1,
+            token2,
+            amount
+          );
+          await tx.wait();
+          showResult('Dual Dex Trade executed successfully');
+        } catch (error) {
+          showResult('Dual Dex Trade failed: ' + error.message);
+        }
+      }
+
+      async function estimateTriDexTrade() {
+        try {
+          const router1 = document.getElementById('triRouter1').value;
+          const router2 = document.getElementById('triRouter2').value;
+          const router3 = document.getElementById('triRouter3').value;
+          const token1 = document.getElementById('triToken1').value;
+          const token2 = document.getElementById('triToken2').value;
+          const token3 = document.getElementById('triToken3').value;
+          const amount = ethers.utils.parseUnits(
+            document.getElementById('triAmount').value,
+            18
+          );
+          const estimate = await contract.estimateTriDexTrade(
+            router1,
+            router2,
+            router3,
+            token1,
+            token2,
+            token3,
+            amount
+          );
+          showResult(
+            'Estimated profit: ' + ethers.utils.formatUnits(estimate, 18)
+          );
+        } catch (error) {
+          showResult('Tri Dex Trade estimation failed: ' + error.message);
+        }
+      }
+
+      async function getBalance() {
+        try {
+          const tokenAddress = document.getElementById('balanceToken').value;
+          const balance = await contract.getBalance(tokenAddress);
+          showResult('Balance: ' + ethers.utils.formatUnits(balance, 18));
+        } catch (error) {
+          showResult('Get balance failed: ' + error.message);
+        }
+      }
+
+      async function recoverEth() {
+        try {
+          const tx = await contract.recoverEth();
+          await tx.wait();
+          showResult('ETH recovered successfully');
+        } catch (error) {
+          showResult('ETH recovery failed: ' + error.message);
+        }
+      }
+
+      async function recoverTokens() {
+        try {
+          const tokenAddress = document.getElementById(
+            'recoverTokenAddress'
+          ).value;
+          const tx = await contract.recoverTokens(tokenAddress);
+          await tx.wait();
+          showResult('Tokens recovered successfully');
+        } catch (error) {
+          showResult('Token recovery failed: ' + error.message);
+        }
+      }
+
+      function showResult(message) {
+        document.getElementById('result').innerText = message;
+      }
+    </script>
+  </body>
+</html>
