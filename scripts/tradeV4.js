@@ -152,18 +152,7 @@ const lookForDualTrade = async () => {
         'Token1 Guthaben des Arb-Kontrakts:',
         token1Balance.toString()
       );
-
-      // Überprüfe und erteile Genehmigungen
-      await checkAndApproveAllowance(
-        targetRoute.token1,
-        targetRoute.router1,
-        tradeSize
-      );
-      await checkAndApproveAllowance(
-        targetRoute.token2,
-        targetRoute.router2,
-        ethers.constants.MaxUint256
-      );
+      
 
       // Überprüfe ausreichendes Guthaben
       if (!(await checkSufficientBalance(targetRoute.token1, tradeSize))) {
@@ -193,6 +182,7 @@ const lookForDualTrade = async () => {
         //{ gasLimit: actualGasLimit.recommendedPrice }
       );
       console.log('Estimation successful, amount back:', amtBack.toString());
+      
 
       if (config.routes.length === 0) {
         fs.appendFile(`./data/${network}RouteLog.txt`, `["${targetRoute.router1}","${targetRoute.router2}","${targetRoute.token1}","${targetRoute.token2}"],\n`, () => {});
@@ -200,6 +190,17 @@ const lookForDualTrade = async () => {
 
       if (amtBack.gt(tradeSize)) {
         console.log('Trade wird ausgeführt...');
+        // Überprüfe und erteile Genehmigungen
+        await checkAndApproveAllowance(
+          targetRoute.token1,
+          targetRoute.router1,
+          tradeSize
+        );
+        await checkAndApproveAllowance(
+          targetRoute.token2,
+          targetRoute.router2,
+          ethers.constants.MaxUint256
+        );
         await dualTrade(
           targetRoute.router1,
           targetRoute.router2,
