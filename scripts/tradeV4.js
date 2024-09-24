@@ -188,6 +188,7 @@ const lookForDualTrade = async () => {
     
       const actualGasLimit = await getPrice();
       try{
+        // WERTE RCHTIG??????
         const amtBack = await arb.callStatic.estimateDualDexTrade(
           targetRoute.router1,
           targetRoute.router2,
