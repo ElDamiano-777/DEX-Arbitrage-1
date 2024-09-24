@@ -21,7 +21,7 @@ const main = async () => {
 };
 
 const searchForRoutes = () => {
-  console.log('Suche neue Routen...');
+  console.log('Suche neue Route...');
   const targetRoute = {
     router1:
       config.routers[Math.floor(Math.random() * config.routers.length)].address,
@@ -33,7 +33,23 @@ const searchForRoutes = () => {
     token2:
       config.tokens[Math.floor(Math.random() * config.tokens.length)].address,
   };
-  console.log(targetRoute);
+
+  if(targetRoute.router1 === targetRoute.router2){
+    console.log("Invalid Route: router1 equals router2.");
+    return;
+  }
+
+  if(targetRoute.token1 === targetRoute.token2){
+    console.log("Invalid Route: token1 equals token2.");
+    return;
+  }
+
+  console.log("Route VALID! " + targetRoute.router1 + " " + targetRoute.router2 + " " + targetRoute.token1 + " " + targetRoute.token2);
+  
+  if (config.routes.length === 0) {
+    fs.appendFile(`./data/${network}RouteLog.txt`, `["${targetRoute.router1}","${targetRoute.router2}","${targetRoute.token1}","${targetRoute.token2}"],\n`, () => {});
+  }
+  //console.log(targetRoute);
   return targetRoute;
 };
 
@@ -116,21 +132,23 @@ const checkSufficientBalance = async (tokenAddress, amount) => {
 
 const lookForDualTrade = async () => {
   while (true) {
+    console.log("\n### NEW LOOKFORDUALTRADE ###");
     try {
       const targetRoute =
         config.routes.length > 0 ? useGoodRoutes() : searchForRoutes();
       const tradeSize = balances[targetRoute.token1].balance;
 
+      console.log("Handelsgröße: " + tradeSize.toString());
       if (tradeSize.lte(ethers.constants.Zero)) {
-        console.log('Handelsgröße zu klein, überspringe...');
+        console.log('Handelsgröße zu klein, überspringe... ');
         continue;
       }
 
-      console.log(
+      /*console.log(
         'Prüfe Parameter vor Gasschätzung:',
         targetRoute,
         tradeSize.toString()
-      );
+      );*/
       console.log('Arb-Kontrakt-Adresse:', arb.address);
 
       const networkStatus = await checkNetworkStatus();
@@ -181,12 +199,12 @@ const lookForDualTrade = async () => {
         ethers.BigNumber.from(tradeSize),
         { gasLimit: actualGasLimit.recommendedPrice }
       );
-      console.log('Estimation successful, amount back:', amtBack.toString());
-      
 
-      if (config.routes.length === 0) {
-        fs.appendFile(`./data/${network}RouteLog.txt`, `["${targetRoute.router1}","${targetRoute.router2}","${targetRoute.token1}","${targetRoute.token2}"],\n`, () => {});
+      if(amtBack <= 0){
+        console.log('Estimation failed, amount back:', amtBack.toString());
+        continue;
       }
+      console.log('Estimation successful, amount back:', amtBack.toString());
 
       if (amtBack.gt(tradeSize)) {
         console.log('Trade wird ausgeführt...');
@@ -211,6 +229,7 @@ const lookForDualTrade = async () => {
       }
     } catch (error) {
       console.error("Route nicht bekannt oder Liqidität nicht vorhanden!");
+      continue;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 5000));

@@ -2,8 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./IUniswapV2FactoryMinimal.sol";
-import "./IUniswapV2PairMinimal.sol";
 //import '@uniswap/v2-periphery/contracts/libraries/UniswapV2Library.sol';
 //import '@uniswap/v3-periphery/contracts/libraries/UniswapV2Library.sol';
 
@@ -41,27 +39,10 @@ contract ArbV2 is Ownable {
     // Optimierte Swap-Funktion
     function swap(address router, address _tokenIn, address _tokenOut, uint256 _amount) public onlyOwner {
         IERC20(_tokenIn).approve(router, _amount);
-        
-        address[] memory path;
-        path = new address[](2);
+        address[] memory path = new address[](2);
         path[0] = _tokenIn;
         path[1] = _tokenOut;
-        
-        uint256 minAmountOut = 1; // Minimaler Ausgabebetrag
-        
-        try IUniswapV2Router(router).swapExactTokensForTokens(
-            _amount,
-            minAmountOut,
-            path,
-            address(this),
-            block.timestamp + DEADLINE
-        ) returns (uint256[] memory amounts) {
-            require(amounts[1] > 0, "Swap failed: Zero output amount");
-        } catch Error(string memory reason) {
-            revert(string(abi.encodePacked("Swap failed: ", reason)));
-        } catch {
-            revert("Swap failed: Unknown error");
-        }
+        IUniswapV2Router(router).swapExactTokensForTokens(_amount, 1, path, address(this), block.timestamp + DEADLINE);
     }
 
     // Funktion zur Berechnung des minimalen Ausgabebetrags
@@ -69,52 +50,28 @@ contract ArbV2 is Ownable {
         address[] memory path = new address[](2);
         path[0] = _tokenIn;
         path[1] = _tokenOut;
-        
-        try IUniswapV2Router(router).getAmountsOut(_amount, path) returns (uint256[] memory amountOutMins) {
-            require(amountOutMins.length > 1, "Invalid output from getAmountsOut");
-            return amountOutMins[1];
-        } catch (bytes memory /*lowLevelData*/) {
-            // Funktion existiert nicht oder Handelspaar ist unbekannt
-            return 0;
-        }
+        uint256[] memory amountOutMins = IUniswapV2Router(router).getAmountsOut(_amount, path);
+        return amountOutMins[1];
     }
 
     // Schätzung des Gewinns für Dual-DEX-Trade
-    function estimateDualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount) public view returns (uint256) {
+    function estimateDualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount) external view returns (uint256) {
         uint256 amtBack1 = getAmountOutMin(_router1, _token1, _token2, _amount);
-        if (amtBack1 == 0) return 0; // Früher Ausstieg, wenn der erste Swap fehlschlägt
-
         uint256 amtBack2 = getAmountOutMin(_router2, _token2, _token1, amtBack1);
-        if (amtBack2 <= _amount) return 0; // Kein Gewinn oder Verlust
-
-        return amtBack2 - _amount;
-    }
-
-    // getReserves Funktion zum ermitteln der Liqidität des Pairs
-    function getReserves(address factory, address tokenA, address tokenB) public view returns (uint reserveA, uint reserveB) {
-        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        address pair = IUniswapV2FactoryMinimal(factory).getPair(token0, token1);
-        require(pair != address(0), "Pair does not exist");
-        (uint reserve0, uint reserve1,) = IUniswapV2PairMinimal(pair).getReserves();
-        (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
+        return amtBack2 > _amount ? amtBack2 - _amount : 0;
     }
 
     // Erweiterte dualDexTrade-Funktion mit getReserves
-    function dualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount) public onlyOwner {
+    function dualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount) external onlyOwner {
         uint256 startBalance = IERC20(_token1).balanceOf(address(this));
         
-        // Überprüfe Liquidität vor dem Trade für DEX1
-        (uint reserveA1,) = getReserves(_router1, _token1, _token2);
-        require(reserveA1 >= _amount, "Insufficient liquidity on DEX 1");
+        // Überprüfe Liquidität vor dem Trade
+        //(uint112 reserve0, uint112 reserve1,) = IUniswapV2Pair(_router1).getReserves();
 
         swap(_router1, _token1, _token2, _amount);
         uint256 token2Balance = IERC20(_token2).balanceOf(address(this));
-
-        // Überprüfe Liquidität vor dem Trade für DEX2
-        (, uint reserveB2) = getReserves(_router2, _token2, _token1);
-        require(reserveB2 >= token2Balance, "Insufficient liquidity on DEX 2");
-
         swap(_router2, _token2, _token1, token2Balance);
+
         uint256 endBalance = IERC20(_token1).balanceOf(address(this));
         uint256 profit = endBalance - startBalance;
         require(profit > MIN_PROFIT_THRESHOLD, "Unzureichender Gewinn");
@@ -124,7 +81,7 @@ contract ArbV2 is Ownable {
     }
 
     // Schätzung des Gewinns für Tri-DEX-Trade
-    function estimateTriDexTrade(address _router1, address _router2, address _router3, address _token1, address _token2, address _token3, uint256 _amount) public view returns (uint256) {
+    function estimateTriDexTrade(address _router1, address _router2, address _router3, address _token1, address _token2, address _token3, uint256 _amount) external view returns (uint256) {
         uint256 amtBack1 = getAmountOutMin(_router1, _token1, _token2, _amount);
         uint256 amtBack2 = getAmountOutMin(_router2, _token2, _token3, amtBack1);
         uint256 amtBack3 = getAmountOutMin(_router3, _token3, _token1, amtBack2);
@@ -132,7 +89,7 @@ contract ArbV2 is Ownable {
     }
 
     // Hilfsfunktionen
-    function getBalance(address _tokenContractAddress) public view returns (uint256) {
+    function getBalance(address _tokenContractAddress) external view returns (uint256) {
         return IERC20(_tokenContractAddress).balanceOf(address(this));
     }
 
@@ -147,8 +104,6 @@ contract ArbV2 is Ownable {
 
     // Ereignis für erfolgreichen Trade
     event SuccessfulTrade(address indexed token1, address indexed token2, uint256 profit);
-    //event LogEvent(string message, uint256 timestamp);
-    //emit LogEvent("Funktion wurde aufgerufen", block.timestamp);
 
     receive() external payable {}
 }
