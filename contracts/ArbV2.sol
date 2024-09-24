@@ -73,7 +73,8 @@ contract ArbV2 is Ownable {
         
         try IUniswapV2Router(router).getAmountsOut(_amount, path) returns (uint256[] memory amountOutMins) {
             require(amountOutMins.length > 1, "Invalid output from getAmountsOut");
-            return amountOutMins.length; 
+            // BINGO!
+            return amountOutMins[1]; 
         } catch (bytes memory /*lowLevelData*/) {
             // Funktion existiert nicht oder Handelspaar ist unbekannt
             return 0;

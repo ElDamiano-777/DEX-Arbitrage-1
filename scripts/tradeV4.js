@@ -186,7 +186,6 @@ const lookForDualTrade = async () => {
     
       const actualGasLimit = await getPrice();
       try{
-        // WERTE RCHTIG??????
         const amtBack = await arb.callStatic.estimateDualDexTrade(
           targetRoute.router1,
           targetRoute.router2,
@@ -197,8 +196,8 @@ const lookForDualTrade = async () => {
         );
         logRoute(targetRoute);
       } catch (e) {
-        logRoute(targetRoute);
-        console.log("estimateDualDexTrade() failed: No Arb!\n");        
+        console.log("estimateDualDexTrade() failed: No Arb!\n\n"); 
+        //console.log(e);     
         continue;
       }
 
