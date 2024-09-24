@@ -9,11 +9,11 @@ const network = hre.network.name;
 if (network === 'aurora') config = require('./../config/aurora.json');
 if (network === 'fantom') config = require('./../config/fantom.json');
 
-console.log(`${config.routes.length} Routen geladen`);
+console.log("DEX Arbitrage Bot started...\n");
+console.log(`${config.routes.length} Routes loaded`);
 
 const manualGasLimit = ethers.utils.parseUnits('816674451', 'wei'); // Anpassen Sie diesen Wert bei Bedarf
-
-console.log("manualGasLimit:", manualGasLimit.toString());
+console.log("manualGasLimit: " + manualGasLimit.toString() + " wei\n");
 
 const main = async () => {
   await setup();
@@ -21,7 +21,8 @@ const main = async () => {
 };
 
 const searchForRoutes = () => {
-  console.log('Suche neue Route...');
+  process.stdout.write(".");
+  
   const targetRoute = {
     router1:
       config.routers[Math.floor(Math.random() * config.routers.length)].address,
@@ -35,16 +36,16 @@ const searchForRoutes = () => {
   };
 
   if(targetRoute.router1 === targetRoute.router2){
-    console.log("Invalid Route: router1 equals router2.");
+    //console.log("Invalid Route: router1 equals router2.");
     return;
   }
 
   if(targetRoute.token1 === targetRoute.token2){
-    console.log("Invalid Route: token1 equals token2.");
+    //console.log("Invalid Route: token1 equals token2.");
     return;
   }
 
-  console.log("Route valid: " + balances[targetRoute.token1].sym + "/" + balances[targetRoute.token2].sym + " on DEXES: " + targetRoute.router1 + " " + targetRoute.router2);
+  console.log("Route valid: " + targetRoute.token1 + " " + balances[targetRoute.token1].sym + " -> " + targetRoute.token2 + " " + balances[targetRoute.token2].sym + " on DEXES: " + targetRoute.router1 + " " + targetRoute.router2);
   
   //console.log(targetRoute);
   return targetRoute;
@@ -64,10 +65,10 @@ const useGoodRoutes = () => {
 
 const checkNetworkStatus = async () => {
   try {
-    console.log('Attempting to get network information...');
+    //console.log('Attempting to get network information...');
     const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
     const network = await provider.getNetwork();
-    console.log('Network:', network);
+    //console.log('Network:', network);
     const blockNumber = await provider.getBlockNumber();
     console.log('Current block number:', blockNumber);
     return true;
@@ -129,20 +130,20 @@ const checkSufficientBalance = async (tokenAddress, amount) => {
 };
 
 const lookForDualTrade = async () => {
-  while (true) {
-    console.log("\n### NEW LOOKFORDUALTRADE ###");
-    try {
+  while (true) {    
+    try {      
       const targetRoute =
         config.routes.length > 0 ? useGoodRoutes() : searchForRoutes();
       const tradeSize = balances[targetRoute.token1].balance;
+      
 
-      console.log("Contract balance token1: " + tradeSize.toString() + " " + balances[targetRoute.token1].sym);
+      //console.log("Contract balance token1: " + tradeSize.toString() + " " + balances[targetRoute.token1].sym);
       if (tradeSize.lte(ethers.constants.Zero)) {
         console.log('Contract out of funds! EXITING...');
         break;
       }
 
-      console.log('Contract:', arb.address);
+      //console.log('Contract:', arb.address);
 
       const networkStatus = await checkNetworkStatus();
       if (!networkStatus) {
@@ -151,7 +152,7 @@ const lookForDualTrade = async () => {
       }
 
       const balance = await ethers.provider.getBalance(owner.address);
-      console.log('Owner balance token1: ' + ethers.utils.formatEther(balance) + " " + balances[targetRoute.token1].sym);
+      //console.log('Owner balance token1: ' + ethers.utils.formatEther(balance) + " " + balances[targetRoute.token1].sym);
       
       /* BRAUCHEN WIR DAS???? Wir haben schon die contract balance von token 1
       const token1Contract = await ethers.getContractAt(
@@ -182,7 +183,8 @@ const lookForDualTrade = async () => {
         tradeSize.toString()
       );
       */
-      console.log('Calling estimateDualDexTrade...');
+
+      console.log('Calling estimateDualDexTrade() on contract');
     
       const actualGasLimit = await getPrice();
       try{
@@ -194,19 +196,17 @@ const lookForDualTrade = async () => {
           tradeSize,
           { gasLimit: actualGasLimit.recommendedPrice }
         );
+        logRoute(targetRoute);
       } catch (e) {
-        console.log("estimateDualDexTrade failed: No Arb!");
+        logRoute(targetRoute);
+        console.log("estimateDualDexTrade() failed: No Arb!\n");        
         continue;
       }
 
-      if (config.routes.length === 0) {
-        fs.appendFile(`./data/${network}RouteLog.txt`, `["${targetRoute.router1}","${targetRoute.router2}","${targetRoute.token1}","${targetRoute.token2}"],\n`, () => {});
-      }
-
-      console.log('Estimation successful, amount back:', amtBack.toString());
+      console.log('Arb found with calculated Profit: ' + amtBack.toString() + " " + balances[targetRoute.token1].sym);
 
       if (amtBack.gt(tradeSize)) {
-        console.log('Trade wird ausgeführt...');
+        console.log('Trade execution...');
         // Überprüfe und erteile Genehmigungen
         /*await checkAndApproveAllowance(
           targetRoute.token1,
@@ -227,7 +227,7 @@ const lookForDualTrade = async () => {
         );
       }
     } catch (error) {
-      console.error("Route nicht bekannt oder Liqidität nicht vorhanden!");
+      //console.error("Route nicht bekannt oder Liqidität nicht vorhanden!");
       continue;
     }
 
@@ -267,36 +267,49 @@ const dualTrade = async (router1, router2, baseToken, token2, amount) => {
 const getPrice = async () => {
   const gasPrice = await ethers.provider.getGasPrice()
 	//{gasPrice: 1000000000001}
-	console.log(`Gas Price: ${gasPrice.toString()}`);
+	//console.log(`Gas Price: ${gasPrice.toString()}`);
 	const recommendedPrice = gasPrice.mul(10).div(9);
-	console.log(`Recommended Price: ${recommendedPrice.toString()}`);
+	//console.log(`Recommended Price: ${recommendedPrice.toString()}`);
   return { gasPrice, recommendedPrice };
+}
+
+const logRoute = (targetRoute) => {
+  if (config.routes.length === 0) {
+    fs.appendFile(`./data/${network}RouteLog.txt`, `["${targetRoute.router1}","${targetRoute.router2}","${targetRoute.token1}","${targetRoute.token2}"],\n`, () => {});
+  }
 }
 
 const setup = async () => {
   [owner] = await ethers.getSigners();
-  console.log(`Besitzer: ${owner.address}`);
+
+  console.log(`Owner: ${owner.address}`);  
+  const ownerBalance = await ethers.provider.getBalance(owner.address);
+  console.log(
+    `Owner Balance: ${ethers.utils.formatEther(ownerBalance)} FTM\n`
+  );
+
   const IArb = await ethers.getContractFactory('ArbV2');
   arb = await IArb.attach(config.arbContract);
+
   balances = {};
 
+  console.log('Contract: ' + arb.address + '');
+  console.log("Contract Balances:");
   for (const asset of config.baseAssets) {
     const assetToken = await ethers
       .getContractFactory('WETH9')
       .then((f) => f.attach(asset.address));
+
     const balance = await assetToken.balanceOf(config.arbContract);
     console.log(`${asset.sym} ${balance.toString()}`);
+    
     balances[asset.address] = {
       sym: asset.sym,
       balance,
       startBalance: balance,
     };
   }
-
-  const ownerBalance = await ethers.provider.getBalance(owner.address);
-  console.log(
-    `Kontostand des Besitzers: ${ethers.utils.formatEther(ownerBalance)} FTM`
-  );
+  console.log("");
 
   setTimeout(() => {
     setInterval(logResults, 600000);
