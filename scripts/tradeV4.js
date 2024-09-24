@@ -13,7 +13,7 @@ console.log(`${config.routes.length} Routen geladen`);
 
 const manualGasLimit = ethers.utils.parseUnits('816674451', 'wei'); // Anpassen Sie diesen Wert bei Bedarf
 
-//console.log("manualGasLimit:", manualGasLimit.toString());
+console.log("manualGasLimit:", manualGasLimit.toString());
 
 const main = async () => {
   await setup();
@@ -172,14 +172,14 @@ const lookForDualTrade = async () => {
       );
       console.log('Calling estimateDualDexTrade...');
     
-      //const actualGasLimit = await getPrice();
+      const actualGasLimit = await getPrice();
       const amtBack = await arb.callStatic.estimateDualDexTrade(
         targetRoute.router1,
         targetRoute.router2,
         targetRoute.token1,
         targetRoute.token2,
         ethers.BigNumber.from(tradeSize),
-        //{ gasLimit: actualGasLimit.recommendedPrice }
+        { gasLimit: actualGasLimit.recommendedPrice }
       );
       console.log('Estimation successful, amount back:', amtBack.toString());
       
@@ -191,7 +191,7 @@ const lookForDualTrade = async () => {
       if (amtBack.gt(tradeSize)) {
         console.log('Trade wird ausgeführt...');
         // Überprüfe und erteile Genehmigungen
-        await checkAndApproveAllowance(
+        /*await checkAndApproveAllowance(
           targetRoute.token1,
           targetRoute.router1,
           tradeSize
@@ -200,7 +200,7 @@ const lookForDualTrade = async () => {
           targetRoute.token2,
           targetRoute.router2,
           ethers.constants.MaxUint256
-        );
+        );*/
         await dualTrade(
           targetRoute.router1,
           targetRoute.router2,
@@ -227,11 +227,11 @@ const dualTrade = async (router1, router2, baseToken, token2, amount) => {
     inTrade = true;
     console.log('> Führe dualTrade aus...');
 
-    //const actualGasLimit = await getPrice();
+    const actualGasLimit = await getPrice();
     const tx = await arb
       .connect(owner)
       .dualDexTrade(router1, router2, baseToken, token2, amount, {
-        //gasLimit: actualGasLimit.recommendedPrice,
+        gasLimit: actualGasLimit.recommendedPrice
       });
     console.log('Transaktion gesendet. Warte auf Bestätigung...');
     const receipt = await tx.wait();
