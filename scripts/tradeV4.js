@@ -20,34 +20,31 @@ const main = async () => {
   await lookForDualTrade();
 };
 
-const searchForRoutes = () => {
-  process.stdout.write(".");
+const searchForRoutes = () => {   
+  const targetRoute = {};
+
+  calc_router1 = Math.floor(Math.random()*config.routers.length);
+  calc_router2 = Math.floor(Math.random()*config.routers.length);
+  calc_token1 = Math.floor(Math.random()*config.baseAssets.length);
+  calc_token2 = Math.floor(Math.random()*config.tokens.length);
+
+  targetRoute.router1 = config.routers[calc_router1].address;
+  targetRoute.router2 = config.routers[calc_router2].address;
+  targetRoute.token1 = config.baseAssets[calc_token1].address;
+  targetRoute.token2 = config.tokens[calc_token2].address;
+
+  if(targetRoute.router1 == targetRoute.router2) return {};
+  if(targetRoute.token1 == targetRoute.token2) return {};
+
+  console.log("----------------------------------------------------------------------"); 
+  console.log("NEW ROUTE\n");
   
-  const targetRoute = {
-    router1:
-      config.routers[Math.floor(Math.random() * config.routers.length)].address,
-    router2:
-      config.routers[Math.floor(Math.random() * config.routers.length)].address,
-    token1:
-      config.baseAssets[Math.floor(Math.random() * config.baseAssets.length)]
-        .address,
-    token2:
-      config.tokens[Math.floor(Math.random() * config.tokens.length)].address,
-  };
+  console.log("\tSwap:\t\t" + config.baseAssets[calc_token1].sym + " -> " + config.tokens[calc_token2].sym);
+  console.log("\tContract:\t" + config.baseAssets[calc_token1].address + " -> " + config.tokens[calc_token2].address);
 
-  if(targetRoute.router1 === targetRoute.router2){
-    //console.log("Invalid Route: router1 equals router2.");
-    return;
-  }
-
-  if(targetRoute.token1 === targetRoute.token2){
-    //console.log("Invalid Route: token1 equals token2.");
-    return;
-  }
-
-  console.log("Route valid: " + targetRoute.token1 + " " + balances[targetRoute.token1].sym + " -> " + targetRoute.token2 + " " + balances[targetRoute.token2].sym + " on DEXES: " + targetRoute.router1 + " " + targetRoute.router2);
-  
-  //console.log(targetRoute);
+  console.log("\n\tRoute:\t\t" + config.routers[calc_router1].dex + " -> " + config.routers[calc_router2].dex);
+  console.log("\tContract:\t" + config.routers[calc_router1].address + " -> " + config.routers[calc_router2].address);
+  console.log("\n");
   return targetRoute;
 };
 
@@ -134,6 +131,7 @@ const lookForDualTrade = async () => {
     try {      
       const targetRoute =
         config.routes.length > 0 ? useGoodRoutes() : searchForRoutes();
+        
       const tradeSize = balances[targetRoute.token1].balance;
       
 
@@ -151,7 +149,7 @@ const lookForDualTrade = async () => {
         continue;
       }
 
-      const balance = await ethers.provider.getBalance(owner.address);
+      //const balance = await ethers.provider.getBalance(owner.address);
       //console.log('Owner balance token1: ' + ethers.utils.formatEther(balance) + " " + balances[targetRoute.token1].sym);
       
       /* BRAUCHEN WIR DAS???? Wir haben schon die contract balance von token 1
@@ -195,7 +193,7 @@ const lookForDualTrade = async () => {
           targetRoute.token1,
           targetRoute.token2,
           tradeSize,
-          { gasLimit: actualGasLimit.recommendedPrice }
+          //{ gasLimit: actualGasLimit.recommendedPrice }
         );
         logRoute(targetRoute);
       } catch (e) {

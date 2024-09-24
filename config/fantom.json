@@ -11,10 +11,8 @@
     { "sym": "axlUSDT", "address": "0x1B6382DBDEa11d97f24495C9A90b7c88469134a4" }
   ],
   "tokens": [
-    { "sym": "axlUSDT", "address": "0x1B6382DBDEa11d97f24495C9A90b7c88469134a4" },
     { "sym": "WIGO", "address": "0xE992bEAb6659BFF447893641A378FbbF031C5bD6" },
     { "sym": "BOO", "address": "0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE" },    
-    { "sym": "wFTM", "address": "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83" },    
     { "sym": "CREAM", "address": "0x657A1861c15A3deD9AF0B6799a195a249ebdCbc6" },
     { "sym": "COVER", "address": "0xB01E8419d842beebf1b70A7b5f7142abbaf7159D" },
     { "sym": "BAND", "address": "0x46E7628E8b4350b2716ab470eE0bA1fa9e76c6C5" },
