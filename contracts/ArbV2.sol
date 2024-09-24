@@ -35,6 +35,7 @@ contract ArbV2 is Ownable {
     // Konstanten für Gasoptimierung
     uint256 private constant DEADLINE = 300;
     uint256 private constant MIN_PROFIT_THRESHOLD = 1; // Minimaler Gewinn in Basiseinheiten
+    uint256 constant PERCENTAGE = 1e6; // 0.0001%
 
     constructor() Ownable() {}
 
@@ -72,7 +73,7 @@ contract ArbV2 is Ownable {
         
         try IUniswapV2Router(router).getAmountsOut(_amount, path) returns (uint256[] memory amountOutMins) {
             require(amountOutMins.length > 1, "Invalid output from getAmountsOut");
-            return amountOutMins[1];
+            return amountOutMins.length; 
         } catch (bytes memory /*lowLevelData*/) {
             // Funktion existiert nicht oder Handelspaar ist unbekannt
             return 0;
@@ -82,12 +83,12 @@ contract ArbV2 is Ownable {
     // Schätzung des Gewinns für Dual-DEX-Trade
     function estimateDualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount) public view returns (uint256) {
         uint256 amtBack1 = getAmountOutMin(_router1, _token1, _token2, _amount);
-        if (amtBack1 == 0) return 0; // Früher Ausstieg, wenn der erste Swap fehlschlägt
+        require(amtBack1 > 0, "Insufficient liquidity on DEX 1");
 
         uint256 amtBack2 = getAmountOutMin(_router2, _token2, _token1, amtBack1);
-        if (amtBack2 <= _amount) return 0; // Kein Gewinn oder Verlust
+        require(amtBack2 > _amount, "Insufficient liquidity on DEX 2");
 
-        return amtBack2 - _amount;
+        return amtBack2 - _amount; // Berechne den tatsächlichen Gewinn
     }
 
     // getReserves Funktion zum ermitteln der Liqidität des Pairs
@@ -117,9 +118,9 @@ contract ArbV2 is Ownable {
         swap(_router2, _token2, _token1, token2Balance);
         uint256 endBalance = IERC20(_token1).balanceOf(address(this));
         uint256 profit = endBalance - startBalance;
-        require(profit > MIN_PROFIT_THRESHOLD, "Unzureichender Gewinn");
+        require(profit > startBalance * PERCENTAGE / 1e16, "Unzureichender Gewinn");
 
-        // Emittiere ein Ereignis für erfolgreichen Trade
+        // Emittiere ein Ereignis für erfolgreichen Traderequire(profit > startBalance * 1e14 / 1e16, "Unzureichender Gewinn");
         emit SuccessfulTrade(_token1, _token2, profit);
     }
 

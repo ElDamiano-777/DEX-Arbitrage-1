@@ -44,11 +44,8 @@ const searchForRoutes = () => {
     return;
   }
 
-  console.log("Route VALID! " + targetRoute.router1 + " " + targetRoute.router2 + " " + targetRoute.token1 + " " + targetRoute.token2);
+  console.log("Route valid: " + balances[targetRoute.token1].sym + "/" + balances[targetRoute.token2].sym + " on DEXES: " + targetRoute.router1 + " " + targetRoute.router2);
   
-  if (config.routes.length === 0) {
-    fs.appendFile(`./data/${network}RouteLog.txt`, `["${targetRoute.router1}","${targetRoute.router2}","${targetRoute.token1}","${targetRoute.token2}"],\n`, () => {});
-  }
   //console.log(targetRoute);
   return targetRoute;
 };
@@ -80,7 +77,7 @@ const checkNetworkStatus = async () => {
   }
 };
 
-const checkAndApproveAllowance = async (
+/*const checkAndApproveAllowance = async (
   tokenAddress,
   spenderAddress,
   amount
@@ -119,6 +116,7 @@ const checkAndApproveAllowance = async (
     console.log('Sufficient allowance already granted.');
   }
 };
+*/
 
 const checkSufficientBalance = async (tokenAddress, amount) => {
   const tokenContract = await ethers.getContractAt(
@@ -138,18 +136,13 @@ const lookForDualTrade = async () => {
         config.routes.length > 0 ? useGoodRoutes() : searchForRoutes();
       const tradeSize = balances[targetRoute.token1].balance;
 
-      console.log("Handelsgröße: " + tradeSize.toString());
+      console.log("Contract balance token1: " + tradeSize.toString() + " " + balances[targetRoute.token1].sym);
       if (tradeSize.lte(ethers.constants.Zero)) {
-        console.log('Handelsgröße zu klein, überspringe... ');
-        continue;
+        console.log('Contract out of funds! EXITING...');
+        break;
       }
 
-      /*console.log(
-        'Prüfe Parameter vor Gasschätzung:',
-        targetRoute,
-        tradeSize.toString()
-      );*/
-      console.log('Arb-Kontrakt-Adresse:', arb.address);
+      console.log('Contract:', arb.address);
 
       const networkStatus = await checkNetworkStatus();
       if (!networkStatus) {
@@ -158,18 +151,17 @@ const lookForDualTrade = async () => {
       }
 
       const balance = await ethers.provider.getBalance(owner.address);
-      console.log('Aktueller Kontosaldo:', ethers.utils.formatEther(balance));
-
+      console.log('Owner balance token1: ' + ethers.utils.formatEther(balance) + " " + balances[targetRoute.token1].sym);
+      
+      /* BRAUCHEN WIR DAS???? Wir haben schon die contract balance von token 1
       const token1Contract = await ethers.getContractAt(
         'IERC20',
         targetRoute.token1,
         owner
       );
+      
       const token1Balance = await token1Contract.balanceOf(arb.address);
-      console.log(
-        'Token1 Guthaben des Arb-Kontrakts:',
-        token1Balance.toString()
-      );
+      console.log('Contract balance token1: ' + token1Balance.toString() + " " + balances[targetRoute.token1].sym);
       
 
       // Überprüfe ausreichendes Guthaben
@@ -179,6 +171,7 @@ const lookForDualTrade = async () => {
       } else {
         console.log('Guthaben vorhanden');
       }
+      
 
       console.log(
         'Parameters:',
@@ -188,22 +181,28 @@ const lookForDualTrade = async () => {
         targetRoute.token2,
         tradeSize.toString()
       );
+      */
       console.log('Calling estimateDualDexTrade...');
     
       const actualGasLimit = await getPrice();
-      const amtBack = await arb.callStatic.estimateDualDexTrade(
-        targetRoute.router1,
-        targetRoute.router2,
-        targetRoute.token1,
-        targetRoute.token2,
-        ethers.BigNumber.from(tradeSize),
-        { gasLimit: actualGasLimit.recommendedPrice }
-      );
-
-      if(amtBack <= 0){
-        console.log('Estimation failed, amount back:', amtBack.toString());
+      try{
+        const amtBack = await arb.callStatic.estimateDualDexTrade(
+          targetRoute.router1,
+          targetRoute.router2,
+          targetRoute.token1,
+          targetRoute.token2,
+          tradeSize,
+          { gasLimit: actualGasLimit.recommendedPrice }
+        );
+      } catch (e) {
+        console.log("estimateDualDexTrade failed: No Arb!");
         continue;
       }
+
+      if (config.routes.length === 0) {
+        fs.appendFile(`./data/${network}RouteLog.txt`, `["${targetRoute.router1}","${targetRoute.router2}","${targetRoute.token1}","${targetRoute.token2}"],\n`, () => {});
+      }
+
       console.log('Estimation successful, amount back:', amtBack.toString());
 
       if (amtBack.gt(tradeSize)) {

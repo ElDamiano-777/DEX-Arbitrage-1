@@ -1,13 +1,9 @@
 {
-  "arbContract": "0x89ecdFCdCd31cF57a169115C18093Ae48fb5a91B",
+  "arbContract": "0xA6E9f0F3CA69AfCFfDEc4D48FB7d0Ee9691BEd97",
   "minBasisPointsPerTrade": 1,
   "routers": [
     { "dex": "spookyswap", "address": "0xf491e7b69e4244ad4002bc14e878a34207e38c29" },
-    { "dex": "wigoswap", "address": "0x5023882f4D1EC10544FCB2066abE9C1645E95AA0" },
-    { "dex": "mummyfinanceV1", "address": "0x6b4E5cbCED6E907Ab8525d83Dd3Cd9Ec6BDb62C4" },
-    { "dex": "odosV2", "address": "0xD0c22A5435F4E8E5770C1fAFb5374015FC12F7cD" },
-    { "dex": "tarot", "address": "0x283e62CFe14b352dB8e30A9575481DCbf589Ad98" },
-    { "dex": "pyreswap", "address": "0x29cf2367f188951E8a33b2424B7CEF75C3a38fA8"}
+    { "dex": "wigoswap", "address": "0x5023882f4D1EC10544FCB2066abE9C1645E95AA0" }
   ],
   "baseAssets": [
     { "sym": "wftm","address": "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83" },
@@ -15,26 +11,7 @@
   ],
   "tokens": [
     { "sym": "axlUSDT", "address": "0x1B6382DBDEa11d97f24495C9A90b7c88469134a4" },
-    { "sym": "WIGO", "address": "0xE992bEAb6659BFF447893641A378FbbF031C5bD6" },
-    { "sym": "BOO", "address": "0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE" },    
-    { "sym": "wFTM", "address": "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83" },    
-    { "sym": "CREAM", "address": "0x657A1861c15A3deD9AF0B6799a195a249ebdCbc6" },
-    { "sym": "COVER", "address": "0xB01E8419d842beebf1b70A7b5f7142abbaf7159D" },
-    { "sym": "BAND", "address": "0x46E7628E8b4350b2716ab470eE0bA1fa9e76c6C5" },
-    { "sym": "CRV", "address": "0x1E4F97b9f9F913c46F1632781732927B9019C68b" },
-    { "sym": "SNX", "address": "0x56ee926bD8c72B2d5fa1aF4d9E4Cbb515a1E3Adc" },
-    { "sym": "AAVE", "address": "0x6a07A792ab2965C72a5B8088d3a069A7aC3a993B" },
-    { "sym": "YFI", "address": "0x29b0Da86e484E1C0029B56e817912d778aC0EC69" },
-    { "sym": "LINK", "address": "0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8" },
-    { "sym": "SUSHI", "address": "0xae75A438b2E0cB8Bb01Ec1E1e376De11D44477CC" },    
-    { "sym": "ICE", "address": "0xf16e81dce15B08F326220742020379B855B87DF9" },
-    { "sym": "BADGER", "address": "0x753fbc5800a8C8e3Fb6DC6415810d627A387Dfc9" },
-    { "sym": "DIGG", "address": "0x08f6fE8f4dC577CF81E40E03E561d29B8b33E19b" },    
-    { "sym": "WOOFY", "address": "0xD0660cD418a64a1d44E9214ad8e459324D8157f1" },
-    { "sym": "ANY", "address": "0xdDcb3fFD12750B45d32E084887fdf1aABAb34239" },
-    { "sym": "BIFI", "address": "0xd6070ae98b8069de6B494332d1A1a81B6179D960" },
-    { "sym": "MIM", "address": "0x82f0B8B456c1A451378467398982d4834b6829c1" },
-    { "sym": "KEK", "address": "0x627524d78B4fC840C887ffeC90563c7A42b671fD" }
+    { "sym": "wFTM", "address": "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83" }
   ],
   "routes": [
     
