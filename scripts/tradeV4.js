@@ -9,42 +9,64 @@ const network = hre.network.name;
 if (network === 'aurora') config = require('./../config/aurora.json');
 if (network === 'fantom') config = require('./../config/fantom.json');
 
-console.log("DEX Arbitrage Bot started...\n");
+console.log('DEX Arbitrage Bot started...\n');
 console.log(`${config.routes.length} Routes loaded`);
 
 const manualGasLimit = ethers.utils.parseUnits('816674451', 'wei'); // Anpassen Sie diesen Wert bei Bedarf
-console.log("manualGasLimit: " + manualGasLimit.toString() + " wei\n");
+console.log('manualGasLimit: ' + manualGasLimit.toString() + ' wei\n');
 
 const main = async () => {
   await setup();
   await lookForDualTrade();
 };
 
-const searchForRoutes = () => {   
+const searchForRoutes = () => {
   const targetRoute = {};
 
-  calc_router1 = Math.floor(Math.random()*config.routers.length);
-  calc_router2 = Math.floor(Math.random()*config.routers.length);
-  calc_token1 = Math.floor(Math.random()*config.baseAssets.length);
-  calc_token2 = Math.floor(Math.random()*config.tokens.length);
+  calc_router1 = Math.floor(Math.random() * config.routers.length);
+  calc_router2 = Math.floor(Math.random() * config.routers.length);
+  calc_token1 = Math.floor(Math.random() * config.baseAssets.length);
+  calc_token2 = Math.floor(Math.random() * config.tokens.length);
 
   targetRoute.router1 = config.routers[calc_router1].address;
   targetRoute.router2 = config.routers[calc_router2].address;
   targetRoute.token1 = config.baseAssets[calc_token1].address;
   targetRoute.token2 = config.tokens[calc_token2].address;
 
-  if(targetRoute.router1 == targetRoute.router2) return {};
-  if(targetRoute.token1 == targetRoute.token2) return {};
+  if (targetRoute.router1 == targetRoute.router2) return {};
+  if (targetRoute.token1 == targetRoute.token2) return {};
 
-  console.log("----------------------------------------------------------------------"); 
-  console.log("NEW ROUTE\n");
-  
-  console.log("\tSwap:\t\t" + config.baseAssets[calc_token1].sym + " -> " + config.tokens[calc_token2].sym);
-  console.log("\tContract:\t" + config.baseAssets[calc_token1].address + " -> " + config.tokens[calc_token2].address);
+  console.log(
+    '----------------------------------------------------------------------'
+  );
+  console.log('NEW ROUTE\n');
 
-  console.log("\n\tRoute:\t\t" + config.routers[calc_router1].dex + " -> " + config.routers[calc_router2].dex);
-  console.log("\tContract:\t" + config.routers[calc_router1].address + " -> " + config.routers[calc_router2].address);
-  console.log("\n");
+  console.log(
+    '\tSwap:\t\t' +
+      config.baseAssets[calc_token1].sym +
+      ' -> ' +
+      config.tokens[calc_token2].sym
+  );
+  console.log(
+    '\tContract:\t' +
+      config.baseAssets[calc_token1].address +
+      ' -> ' +
+      config.tokens[calc_token2].address
+  );
+
+  console.log(
+    '\n\tRoute:\t\t' +
+      config.routers[calc_router1].dex +
+      ' -> ' +
+      config.routers[calc_router2].dex
+  );
+  console.log(
+    '\tContract:\t' +
+      config.routers[calc_router1].address +
+      ' -> ' +
+      config.routers[calc_router2].address
+  );
+  console.log('\n');
   return targetRoute;
 };
 
@@ -127,13 +149,12 @@ const checkSufficientBalance = async (tokenAddress, amount) => {
 };
 
 const lookForDualTrade = async () => {
-  while (true) {    
-    try {      
+  while (true) {
+    try {
       const targetRoute =
         config.routes.length > 0 ? useGoodRoutes() : searchForRoutes();
-        
+
       const tradeSize = balances[targetRoute.token1].balance;
-      
 
       //console.log("Contract balance token1: " + tradeSize.toString() + " " + balances[targetRoute.token1].sym);
       if (tradeSize.lte(ethers.constants.Zero)) {
@@ -151,7 +172,7 @@ const lookForDualTrade = async () => {
 
       //const balance = await ethers.provider.getBalance(owner.address);
       //console.log('Owner balance token1: ' + ethers.utils.formatEther(balance) + " " + balances[targetRoute.token1].sym);
-      
+
       /* BRAUCHEN WIR DAS???? Wir haben schon die contract balance von token 1
       const token1Contract = await ethers.getContractAt(
         'IERC20',
@@ -183,25 +204,30 @@ const lookForDualTrade = async () => {
       */
 
       console.log('Calling estimateDualDexTrade() on contract');
-    
+
       const actualGasLimit = await getPrice();
-      try{        
+      try {
         const amtBack = await arb.callStatic.estimateDualDexTrade(
           targetRoute.router1,
           targetRoute.router2,
           targetRoute.token1,
           targetRoute.token2,
-          tradeSize,
+          tradeSize
           //{ gasLimit: actualGasLimit.recommendedPrice }
-        );        
+        );
         logRoute(targetRoute);
       } catch (e) {
-        console.log("estimateDualDexTrade() failed: No Arb!\n\n"); 
-        //console.log(e);     
+        console.log('estimateDualDexTrade() failed: No Arb!\n\n');
+        //console.log(e);
         continue;
       }
 
-      console.log('Arb found with calculated Profit: ' + amtBack.toString() + " " + balances[targetRoute.token1].sym);
+      console.log(
+        'Arb found with calculated Profit: ' +
+          amtBack.toString() +
+          ' ' +
+          balances[targetRoute.token1].sym
+      );
 
       if (amtBack.gt(tradeSize)) {
         console.log('Trade execution...');
@@ -247,7 +273,7 @@ const dualTrade = async (router1, router2, baseToken, token2, amount) => {
     const tx = await arb
       .connect(owner)
       .dualDexTrade(router1, router2, baseToken, token2, amount, {
-        gasLimit: actualGasLimit.recommendedPrice
+        gasLimit: actualGasLimit.recommendedPrice,
       });
     console.log('Transaktion gesendet. Warte auf Bestätigung...');
     const receipt = await tx.wait();
@@ -263,36 +289,38 @@ const dualTrade = async (router1, router2, baseToken, token2, amount) => {
 };
 
 const getPrice = async () => {
-  const gasPrice = await ethers.provider.getGasPrice()
-	//{gasPrice: 1000000000001}
-	//console.log(`Gas Price: ${gasPrice.toString()}`);
-	const recommendedPrice = gasPrice.mul(10).div(9);
-	//console.log(`Recommended Price: ${recommendedPrice.toString()}`);
+  const gasPrice = await ethers.provider.getGasPrice();
+  //{gasPrice: 1000000000001}
+  //console.log(`Gas Price: ${gasPrice.toString()}`);
+  const recommendedPrice = gasPrice.mul(10).div(9);
+  //console.log(`Recommended Price: ${recommendedPrice.toString()}`);
   return { gasPrice, recommendedPrice };
-}
+};
 
 const logRoute = (targetRoute) => {
   if (config.routes.length === 0) {
-    fs.appendFile(`./data/${network}RouteLog.txt`, `["${targetRoute.router1}","${targetRoute.router2}","${targetRoute.token1}","${targetRoute.token2}"],\n`, () => {});
+    fs.appendFile(
+      `./data/${network}RouteLog.txt`,
+      `["${targetRoute.router1}","${targetRoute.router2}","${targetRoute.token1}","${targetRoute.token2}"],\n`,
+      () => {}
+    );
   }
-}
+};
 
 const setup = async () => {
   [owner] = await ethers.getSigners();
 
-  console.log(`Owner: ${owner.address}`);  
+  console.log(`Owner: ${owner.address}`);
   const ownerBalance = await ethers.provider.getBalance(owner.address);
-  console.log(
-    `Owner Balance: ${ethers.utils.formatEther(ownerBalance)} FTM\n`
-  );
+  console.log(`Owner Balance: ${ethers.utils.formatEther(ownerBalance)} FTM\n`);
 
   const IArb = await ethers.getContractFactory('ArbV2');
   arb = await IArb.attach(config.arbContract);
-
+  setupEventListeners();
   balances = {};
 
   console.log('Contract: ' + arb.address + '');
-  console.log("Contract Balances:");
+  console.log('Contract Balances:');
   for (const asset of config.baseAssets) {
     const assetToken = await ethers
       .getContractFactory('WETH9')
@@ -300,14 +328,14 @@ const setup = async () => {
 
     const balance = await assetToken.balanceOf(config.arbContract);
     console.log(`${asset.sym} ${balance.toString()}`);
-    
+
     balances[asset.address] = {
       sym: asset.sym,
       balance,
       startBalance: balance,
     };
   }
-  console.log("");
+  console.log('');
 
   setTimeout(() => {
     setInterval(logResults, 600000);
@@ -342,6 +370,77 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason, p) => {
   console.error('Unbehandelte Ablehnung:', p, 'Grund:', reason);
 });
+
+const setupEventListeners = () => {
+  // Listener für LogSwapOperationFail
+  arb.on(
+    'LogSwapOperationFail',
+    (operation, router, tokenIn, tokenOut, amountIn, amountOut, event) => {
+      console.log(
+        `LogSwapOperationFail: Operation ${operation}, Router ${router}, TokenIn ${tokenIn}, TokenOut ${tokenOut}, AmountIn ${amountIn}, AmountOut ${amountOut}`
+      );
+      console.log(event); // Gibt das gesamte Event-Objekt aus
+    }
+  );
+
+  // Listener für LogSwapOperation
+  arb.on(
+    'LogSwapOperation',
+    (operation, router, tokenIn, tokenOut, amountIn, amountOut, event) => {
+      console.log(
+        `LogSwapOperation: Operation ${operation}, Router ${router}, TokenIn ${tokenIn}, TokenOut ${tokenOut}, AmountIn ${amountIn}, AmountOut ${amountOut}`
+      );
+      console.log(event);
+    }
+  );
+
+  // Listener für LogGetAmountOutMin
+  arb.on(
+    'LogGetAmountOutMin',
+    (
+      amountOutMin0,
+      amountOutMin1,
+      _amount,
+      router,
+      tokenIn,
+      tokenOut,
+      event
+    ) => {
+      console.log(
+        `LogGetAmountOutMin: AmountOutMin0 ${amountOutMin0}, AmountOutMin1 ${amountOutMin1}, Amount ${_amount}, Router ${router}, TokenIn ${tokenIn}, TokenOut ${tokenOut}`
+      );
+      console.log(event);
+    }
+  );
+
+  // Listener für LogEstimateDualDexTrade
+  arb.on(
+    'LogEstimateDualDexTrade',
+    (
+      direction,
+      router1,
+      router2,
+      token1,
+      token2,
+      amount,
+      amountBack,
+      event
+    ) => {
+      console.log(
+        `LogEstimateDualDexTrade: Direction ${direction}, Router1 ${router1}, Router2 ${router2}, Token1 ${token1}, Token2 ${token2}, Amount ${amount}, AmountBack ${amountBack}`
+      );
+      console.log(event);
+    }
+  );
+
+  // Listener für LogReservesObtained
+  arb.on('LogReservesObtained', (tokenA, tokenB, reserveA, reserveB, event) => {
+    console.log(
+      `LogReservesObtained: TokenA ${tokenA}, TokenB ${tokenB}, ReserveA ${reserveA}, ReserveB ${reserveB}`
+    );
+    console.log(event);
+  });
+};
 
 main()
   .then(() => process.exit(0))

@@ -2,18 +2,41 @@
   "arbContract": "0x38148944FbaF23072e9dB68C594A58Fb32ae6f3F",
   "minBasisPointsPerTrade": 1,
   "routers": [
-    { "dex": "spookyswap", "address": "0xf491e7b69e4244ad4002bc14e878a34207e38c29" },
-    { "dex": "wigoswap", "address": "0x5023882f4D1EC10544FCB2066abE9C1645E95AA0" },
-    { "dex": "mummyfinanceV1", "address": "0x6b4E5cbCED6E907Ab8525d83Dd3Cd9Ec6BDb62C4" }
+    {
+      "dex": "spookyswap",
+      "address": "0xf491e7b69e4244ad4002bc14e878a34207e38c29"
+    },
+    {
+      "dex": "wigoswap",
+      "address": "0x5023882f4D1EC10544FCB2066abE9C1645E95AA0"
+    },
+    {
+      "dex": "mummyfinanceV1",
+      "address": "0x6b4E5cbCED6E907Ab8525d83Dd3Cd9Ec6BDb62C4"
+    },
+    {
+      "dex": "SpiritSwap",
+      "address": "0x16327E3FbDaCA3bcF7E38F5Af2599D2DDc33aE52"
+    },
+    {
+      "dex": "SushiSwap",
+      "address": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506"
+    }
   ],
   "baseAssets": [
-    { "sym": "wftm","address": "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83" },
-    { "sym": "axlUSDT", "address": "0x1B6382DBDEa11d97f24495C9A90b7c88469134a4" }    
+    { "sym": "wftm", "address": "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83" },
+    {
+      "sym": "axlUSDT",
+      "address": "0x1B6382DBDEa11d97f24495C9A90b7c88469134a4"
+    }
   ],
   "tokens": [
-    { "sym": "USDC.e", "address": "0x2F733095B80A04b38b0D10cC884524a3d09b836a" },
+    {
+      "sym": "USDC.e",
+      "address": "0x2F733095B80A04b38b0D10cC884524a3d09b836a"
+    },
     { "sym": "WIGO", "address": "0xE992bEAb6659BFF447893641A378FbbF031C5bD6" },
-    { "sym": "BOO", "address": "0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE" },    
+    { "sym": "BOO", "address": "0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE" },
     { "sym": "CREAM", "address": "0x657A1861c15A3deD9AF0B6799a195a249ebdCbc6" },
     { "sym": "COVER", "address": "0xB01E8419d842beebf1b70A7b5f7142abbaf7159D" },
     { "sym": "BAND", "address": "0x46E7628E8b4350b2716ab470eE0bA1fa9e76c6C5" },
@@ -22,17 +45,26 @@
     { "sym": "AAVE", "address": "0x6a07A792ab2965C72a5B8088d3a069A7aC3a993B" },
     { "sym": "YFI", "address": "0x29b0Da86e484E1C0029B56e817912d778aC0EC69" },
     { "sym": "LINK", "address": "0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8" },
-    { "sym": "SUSHI", "address": "0xae75A438b2E0cB8Bb01Ec1E1e376De11D44477CC" },    
+    { "sym": "SUSHI", "address": "0xae75A438b2E0cB8Bb01Ec1E1e376De11D44477CC" },
     { "sym": "ICE", "address": "0xf16e81dce15B08F326220742020379B855B87DF9" },
-    { "sym": "BADGER", "address": "0x753fbc5800a8C8e3Fb6DC6415810d627A387Dfc9" },
-    { "sym": "DIGG", "address": "0x08f6fE8f4dC577CF81E40E03E561d29B8b33E19b" },    
+    {
+      "sym": "BADGER",
+      "address": "0x753fbc5800a8C8e3Fb6DC6415810d627A387Dfc9"
+    },
+    { "sym": "DIGG", "address": "0x08f6fE8f4dC577CF81E40E03E561d29B8b33E19b" },
     { "sym": "WOOFY", "address": "0xD0660cD418a64a1d44E9214ad8e459324D8157f1" },
     { "sym": "ANY", "address": "0xdDcb3fFD12750B45d32E084887fdf1aABAb34239" },
     { "sym": "BIFI", "address": "0xd6070ae98b8069de6B494332d1A1a81B6179D960" },
     { "sym": "MIM", "address": "0x82f0B8B456c1A451378467398982d4834b6829c1" },
-    { "sym": "KEK", "address": "0x627524d78B4fC840C887ffeC90563c7A42b671fD" }
+    { "sym": "KEK", "address": "0x627524d78B4fC840C887ffeC90563c7A42b671fD" },
+    { "sym": "POWER", "address": "0xb13092f9139439dbc00120f452100df15e4e8d20" },
+    { "sym": "NFTW", "address": "0xb5c622c8598c5f69d48dea1ea414189502e6b35d" },
+    { "sym": "NFTWs", "address": "0xf5d511cb783e40ca68dfe8de78e57c3cdb497f1a" },
+    {
+      "sym": "SPIRIT",
+      "address": "0x5cc61a78f164885776aa610fb0fe1257df78e59b"
+    },
+    { "sym": "TSHARE", "address": "0x4cdf39285d7ca8eb3f090fda0c069ba5f4145b37" }
   ],
-  "routes": [
-    
-  ]   
+  "routes": []
 }
