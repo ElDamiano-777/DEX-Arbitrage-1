@@ -316,7 +316,7 @@ const setup = async () => {
 
   const IArb = await ethers.getContractFactory('ArbV2');
   arb = await IArb.attach(config.arbContract);
-  setupEventListeners();
+
   balances = {};
 
   console.log('Contract: ' + arb.address + '');
@@ -370,77 +370,6 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason, p) => {
   console.error('Unbehandelte Ablehnung:', p, 'Grund:', reason);
 });
-
-const setupEventListeners = () => {
-  // Listener für LogSwapOperationFail
-  arb.on(
-    'LogSwapOperationFail',
-    (operation, router, tokenIn, tokenOut, amountIn, amountOut, event) => {
-      console.log(
-        `LogSwapOperationFail: Operation ${operation}, Router ${router}, TokenIn ${tokenIn}, TokenOut ${tokenOut}, AmountIn ${amountIn}, AmountOut ${amountOut}`
-      );
-      console.log(event); // Gibt das gesamte Event-Objekt aus
-    }
-  );
-
-  // Listener für LogSwapOperation
-  arb.on(
-    'LogSwapOperation',
-    (operation, router, tokenIn, tokenOut, amountIn, amountOut, event) => {
-      console.log(
-        `LogSwapOperation: Operation ${operation}, Router ${router}, TokenIn ${tokenIn}, TokenOut ${tokenOut}, AmountIn ${amountIn}, AmountOut ${amountOut}`
-      );
-      console.log(event);
-    }
-  );
-
-  // Listener für LogGetAmountOutMin
-  arb.on(
-    'LogGetAmountOutMin',
-    (
-      amountOutMin0,
-      amountOutMin1,
-      _amount,
-      router,
-      tokenIn,
-      tokenOut,
-      event
-    ) => {
-      console.log(
-        `LogGetAmountOutMin: AmountOutMin0 ${amountOutMin0}, AmountOutMin1 ${amountOutMin1}, Amount ${_amount}, Router ${router}, TokenIn ${tokenIn}, TokenOut ${tokenOut}`
-      );
-      console.log(event);
-    }
-  );
-
-  // Listener für LogEstimateDualDexTrade
-  arb.on(
-    'LogEstimateDualDexTrade',
-    (
-      direction,
-      router1,
-      router2,
-      token1,
-      token2,
-      amount,
-      amountBack,
-      event
-    ) => {
-      console.log(
-        `LogEstimateDualDexTrade: Direction ${direction}, Router1 ${router1}, Router2 ${router2}, Token1 ${token1}, Token2 ${token2}, Amount ${amount}, AmountBack ${amountBack}`
-      );
-      console.log(event);
-    }
-  );
-
-  // Listener für LogReservesObtained
-  arb.on('LogReservesObtained', (tokenA, tokenB, reserveA, reserveB, event) => {
-    console.log(
-      `LogReservesObtained: TokenA ${tokenA}, TokenB ${tokenB}, ReserveA ${reserveA}, ReserveB ${reserveB}`
-    );
-    console.log(event);
-  });
-};
 
 main()
   .then(() => process.exit(0))

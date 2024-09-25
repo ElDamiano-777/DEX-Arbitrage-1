@@ -39,15 +39,6 @@ contract ArbV2 is Ownable {
 
     constructor() Ownable() {}
 
-       // Log-Events
-    event LogSwapOperationFail(string operation, address router, address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOut);
-    event LogSwapOperation(string operation, address router, address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOut);
-    event LogGetAmountOutMin(uint256 amountOutMin0, uint256 amountOutMin1, uint256 _amount, address router, address tokenIn, address tokenOut);
-    event LogEstimateDualDexTrade(string direction, address router1, address router2,address token1, address token2, uint256 amount, uint256 amountBack);
-    event DebugLog(string description, address addr, uint256 value);
-    event LogReservesObtained(address tokenA, address tokenB, uint256 reserveA, uint256 reserveB);
-
-
     // Optimierte Swap-Funktion
     function swap(address router, address _tokenIn, address _tokenOut, uint256 _amount) public onlyOwner {
         IERC20(_tokenIn).approve(router, _amount);
@@ -66,8 +57,7 @@ contract ArbV2 is Ownable {
             address(this),
             block.timestamp + DEADLINE
         ) returns (uint256[] memory amounts) {
-            emit LogSwapOperationFail("Swap Failed", router, _tokenIn, _tokenOut, _amount, amounts[1]);
-            require(amounts[1] > 0, "Swap failed: Zero output amount"); // Does this makes sense "> 0" ?
+            require(amounts[1] > 0, "Swap failed: Zero output amount");
         } catch Error(string memory reason) {
             revert(string(abi.encodePacked("Swap failed: ", reason)));
         } catch {
@@ -76,16 +66,13 @@ contract ArbV2 is Ownable {
     }
 
     // Funktion zur Berechnung des minimalen Ausgabebetrags
-    function getAmountOutMin(address router, address _tokenIn, address _tokenOut, uint256 _amount) public returns (uint256) {
+    function getAmountOutMin(address router, address _tokenIn, address _tokenOut, uint256 _amount) public view returns (uint256) {
         address[] memory path = new address[](2);
         path[0] = _tokenIn;
         path[1] = _tokenOut;
         
         try IUniswapV2Router(router).getAmountsOut(_amount, path) returns (uint256[] memory amountOutMins) {
-            emit LogGetAmountOutMin(amountOutMins[0], amountOutMins[1], _amount, router, _tokenIn, _tokenOut);
-
             require(amountOutMins.length > 1, "Invalid output from getAmountsOut");
-
             // BINGO!
             return amountOutMins[1]; 
         } catch (bytes memory /*lowLevelData*/) {
@@ -95,14 +82,12 @@ contract ArbV2 is Ownable {
     }
 
     // Schätzung des Gewinns für Dual-DEX-Trade
-    function estimateDualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount) public returns (uint256) {
+    function estimateDualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount) public view returns (uint256) {
         uint256 amtBack1 = getAmountOutMin(_router1, _token1, _token2, _amount);
-        emit LogEstimateDualDexTrade('amtBack1', _router1, _router2, _token1, _token2, _amount, amtBack1);
-        // require(amtBack1 > 0, "Insufficient liquidity on DEX 1");
+        require(amtBack1 > 0, "Insufficient liquidity on DEX 1");
 
         uint256 amtBack2 = getAmountOutMin(_router2, _token2, _token1, amtBack1);
-        emit LogEstimateDualDexTrade('amtBack2', _router1, _router2, _token1, _token2, _amount, amtBack2);
-        // require(amtBack2 > _amount, "Insufficient liquidity on DEX 2");
+        require(amtBack2 > _amount, "Insufficient liquidity on DEX 2");
 
         return amtBack2 - _amount; // Berechne den tatsächlichen Gewinn
     }
@@ -141,7 +126,7 @@ contract ArbV2 is Ownable {
     }
 
     // Schätzung des Gewinns für Tri-DEX-Trade
-    function estimateTriDexTrade(address _router1, address _router2, address _router3, address _token1, address _token2, address _token3, uint256 _amount) public returns (uint256) {
+    function estimateTriDexTrade(address _router1, address _router2, address _router3, address _token1, address _token2, address _token3, uint256 _amount) public view returns (uint256) {
         uint256 amtBack1 = getAmountOutMin(_router1, _token1, _token2, _amount);
         uint256 amtBack2 = getAmountOutMin(_router2, _token2, _token3, amtBack1);
         uint256 amtBack3 = getAmountOutMin(_router3, _token3, _token1, amtBack2);
@@ -163,10 +148,8 @@ contract ArbV2 is Ownable {
     }
 
     // Ereignis für erfolgreichen Trade
-    event SuccessfulTrade(address token1, address token2, uint256 profit);
-    event LogEvent(string message, uint256 timestamp);
-
-    event LogGetAmountOutMinError();
+    event SuccessfulTrade(address indexed token1, address indexed token2, uint256 profit);
+    //event LogEvent(string message, uint256 timestamp);
     //emit LogEvent("Funktion wurde aufgerufen", block.timestamp);
 
     receive() external payable {}
