@@ -207,7 +207,7 @@ const lookForDualTrade = async () => {
 
       const actualGasLimit = await getPrice();
       try {
-        const amtBack = await arb.callStatic.estimateDualDexTrade(
+        const profit = await arb.callStatic.estimateDualDexTrade(
           targetRoute.router1,
           targetRoute.router2,
           targetRoute.token1,
@@ -216,20 +216,26 @@ const lookForDualTrade = async () => {
           //{ gasLimit: actualGasLimit.recommendedPrice }
         );
         logRoute(targetRoute);
-      } catch (e) {
-        console.log('estimateDualDexTrade() failed: No Arb!\n\n');
-        //console.log(e);
+      } catch (e) {     
+        
+        if(e.reason == 'cannot estimate gas; transaction may fail or may require manual gas limit') {          
+          //IM CONTRACT SCHLÄGT FEHEL: uint256[] memory amountOutMins = IUniswapV2Router(router).getAmountsOut(_amount, path);
+          console.log('getAmountsOut() in internal contract call failed: Pair not found!');
+          continue;
+        }
+
+        console.log(JSON.stringify(e));
         continue;
       }
 
       console.log(
         'Arb found with calculated Profit: ' +
-          amtBack.toString() +
+          profit.toString() +
           ' ' +
           balances[targetRoute.token1].sym
       );
 
-      if (amtBack.gt(tradeSize)) {
+      if (profit.gt(0)) {
         console.log('Trade execution...');
         // Überprüfe und erteile Genehmigungen
         /*await checkAndApproveAllowance(

@@ -70,26 +70,29 @@ contract ArbV2 is Ownable {
         address[] memory path = new address[](2);
         path[0] = _tokenIn;
         path[1] = _tokenOut;
+
+        /*
+            HINWEIS: spookyswap gibt zwei Werte zurück im Fehlerfall, also 
+            z.b. 5000,0
+            spiritswap hingegen wirft im Fehlerfall eine exception
+            
+        */
         
-        try IUniswapV2Router(router).getAmountsOut(_amount, path) returns (uint256[] memory amountOutMins) {
-            require(amountOutMins[1] > 0, "Invalid output from getAmountsOut");
-            // BINGO!
-            return amountOutMins[1]; 
-        } catch (bytes memory /*lowLevelData*/) {
-            // Funktion existiert nicht oder Handelspaar ist unbekannt
-            return 0;
-        }
+        uint256[] memory amountOutMins = IUniswapV2Router(router).getAmountsOut(_amount, path); // EXCEPTION oder WERTE im Fehlerfall
+        require(amountOutMins[1] > 0, "Invalid output from getAmountsOut"); // EXCEPTION im Fehlerfall (Abgefangen wenn WERTE Fehler vorher auftrat)
+        return amountOutMins[1];    // Wenn kein Fehler, dann wird der Wert zurück gegeben  
+    
     }
 
     // Schätzung des Gewinns für Dual-DEX-Trade
     function estimateDualDexTrade(address _router1, address _router2, address _token1, address _token2, uint256 _amount) public view returns (uint256) {
-        uint256 amtBack1 = getAmountOutMin(_router1, _token1, _token2, _amount);
+        uint256 amtBack1 = getAmountOutMin(_router1, _token1, _token2, _amount);    // EXCEPTION oder WERT
         require(amtBack1 > 0, "Insufficient liquidity on DEX 1");
 
-        uint256 amtBack2 = getAmountOutMin(_router2, _token2, _token1, amtBack1);
+        uint256 amtBack2 = getAmountOutMin(_router2, _token2, _token1, amtBack1);   // EXCEPTION oder WERT
         require(amtBack2 > _amount, "Insufficient liquidity on DEX 2");
 
-        return amtBack2 - _amount; // Berechne den tatsächlichen Gewinn
+        return amtBack2 - _amount; // Berechne den PROFIT
     }
 
     // getReserves Funktion zum ermitteln der Liqidität des Pairs
