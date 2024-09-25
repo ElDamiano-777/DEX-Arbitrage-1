@@ -72,7 +72,7 @@ contract ArbV2 is Ownable {
         path[1] = _tokenOut;
         
         try IUniswapV2Router(router).getAmountsOut(_amount, path) returns (uint256[] memory amountOutMins) {
-            require(amountOutMins.length > 1, "Invalid output from getAmountsOut");
+            require(amountOutMins[1] > 0, "Invalid output from getAmountsOut");
             // BINGO!
             return amountOutMins[1]; 
         } catch (bytes memory /*lowLevelData*/) {
@@ -119,7 +119,7 @@ contract ArbV2 is Ownable {
         swap(_router2, _token2, _token1, token2Balance);
         uint256 endBalance = IERC20(_token1).balanceOf(address(this));
         uint256 profit = endBalance - startBalance;
-        require(profit > startBalance * PERCENTAGE / 1e16, "Unzureichender Gewinn");
+        require(profit > 0, "Unzureichender Gewinn");
 
         // Emittiere ein Ereignis für erfolgreichen Traderequire(profit > startBalance * 1e14 / 1e16, "Unzureichender Gewinn");
         emit SuccessfulTrade(_token1, _token2, profit);
